@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda Promesas Chile · Los Ríos</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+:root{
+  --rojo:#C8102E;--rojo-d:#9B0B22;--azul:#003087;--azul-c:#1A4FAA;
+  --gris:#F5F6FA;--borde:#E2E6EF;--gt:#6B7280;--texto:#111827;
+  --verde:#16A34A;--verde-bg:#DCFCE7;--amarillo:#D97706;--am-bg:#FEF3C7;
+  --kine:#7C3AED;--kine-bg:#EDE9FE;
+  --psico:#0891B2;--psico-bg:#CFFAFE;
+  --nutri:#16A34A;--nutri-bg:#DCFCE7;
+  --medico:#C8102E;--medico-bg:#FEE2E2;
+  --profis:#D97706;--profis-bg:#FEF3C7;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--gris);color:var(--texto);min-height:100vh;}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:linear-gradient(135deg,var(--azul) 0%,#001a55 100%);display:flex;align-items:center;justify-content:center;z-index:1000;}
+.login-box{background:white;border-radius:16px;padding:40px 36px;width:380px;box-shadow:0 24px 64px rgba(0,0,0,.3);}
+.login-logo{width:48px;height:48px;background:var(--rojo);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:white;margin-bottom:20px;}
+.login-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;color:var(--azul);letter-spacing:-.5px;margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--gt);margin-bottom:28px;}
+.profile-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.profile-btn{padding:14px 16px;border:2px solid var(--borde);border-radius:10px;cursor:pointer;background:white;text-align:left;transition:all .15s;display:flex;align-items:center;gap:12px;}
+.profile-btn:hover{border-color:var(--azul-c);background:#F0F4FF;}
+.profile-btn.selected{border-color:var(--azul);background:#EFF6FF;}
+.profile-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.profile-name{font-weight:700;font-size:13px;color:var(--texto);}
+.profile-desc{font-size:11px;color:var(--gt);margin-top:2px;}
+.login-note{font-size:11px;color:var(--gt);text-align:center;margin-top:12px;}
+
+/* TOPBAR */
+#app{display:none;}
+.topbar{background:var(--azul);color:white;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:58px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,48,135,.3);}
+.topbar-brand{display:flex;align-items:center;gap:10px;}
+.tlogo{width:32px;height:32px;background:var(--rojo);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;}
+.ttitle{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;}
+.tsub{font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.4px;}
+.tnav{display:flex;gap:2px;}
+.nav-btn{background:none;border:none;color:rgba(255,255,255,.65);padding:7px 13px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;transition:all .15s;}
+.nav-btn:hover,.nav-btn.active{background:rgba(255,255,255,.15);color:white;}
+.tuser{display:flex;align-items:center;gap:8px;}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--rojo);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;}
+.role-chip{font-size:10px;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:20px;font-weight:600;}
+
+/* LAYOUT */
+.main{max-width:1200px;margin:0 auto;padding:22px 20px;}
+.view{display:none;} .view.active{display:block;}
+.page-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;}
+.page-title{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--azul);letter-spacing:-.4px;}
+.page-sub{font-size:12px;color:var(--gt);margin-top:2px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;text-decoration:none;}
+.btn-primary{background:var(--rojo);color:white;} .btn-primary:hover{background:var(--rojo-d);}
+.btn-secondary{background:white;color:var(--azul);border:1.5px solid var(--borde);} .btn-secondary:hover{border-color:var(--azul);}
+.btn-ghost{background:transparent;color:var(--gt);} .btn-ghost:hover{background:var(--gris);color:var(--texto);}
+.btn-warn{background:var(--am-bg);color:var(--amarillo);border:1.5px solid #FDE68A;} .btn-warn:hover{background:#FDE68A;}
+.btn-danger{background:#FEE2E2;color:var(--rojo);border:1.5px solid #FECACA;}
+.btn-verde{background:var(--verde-bg);color:var(--verde);border:1.5px solid #BBF7D0;}
+.btn-sm{padding:5px 10px;font-size:11px;}
+
+/* CARDS */
+.card{background:white;border-radius:12px;border:1px solid var(--borde);box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.card-hdr{padding:14px 18px 12px;border-bottom:1px solid var(--borde);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;}
+.card-body{padding:16px;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px;}
+.stat-card{background:white;border-radius:10px;border:1px solid var(--borde);padding:14px;display:flex;flex-direction:column;gap:5px;}
+.stat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.stat-num{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;letter-spacing:-1px;line-height:1;}
+.stat-lbl{font-size:11px;color:var(--gt);font-weight:500;}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;font-size:10px;font-weight:600;color:var(--gt);text-transform:uppercase;letter-spacing:.5px;padding:9px 12px;background:var(--gris);}
+td{padding:10px 12px;font-size:12px;border-bottom:1px solid var(--borde);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#FAFBFF;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;}
+.b-kine{background:var(--kine-bg);color:var(--kine);}
+.b-psico{background:var(--psico-bg);color:var(--psico);}
+.b-nutri{background:var(--nutri-bg);color:var(--nutri);}
+.b-medico{background:var(--medico-bg);color:var(--medico);}
+.b-profis{background:var(--profis-bg);color:var(--profis);}
+.b-pend{background:#FEF3C7;color:#92400E;}
+.b-conf{background:#DCFCE7;color:#15803D;}
+.b-susp{background:#FEE2E2;color:#B91C1C;}
+.b-comp{background:#E0E7FF;color:#3730A3;}
+.b-adm{background:#F3E8FF;color:#7C3AED;}
+.b-prof{background:#CFFAFE;color:#0E7490;}
+.b-ent{background:#FEF3C7;color:#92400E;}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-group{display:flex;flex-direction:column;gap:4px;}
+.form-group.full{grid-column:1/-1;}
+.label{font-size:12px;font-weight:600;color:var(--texto);}
+.label span{color:var(--rojo);}
+.fc{padding:8px 10px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;color:var(--texto);background:white;transition:border .15s;-webkit-appearance:none;appearance:none;}
+.fc:focus{outline:none;border-color:var(--azul-c);box-shadow:0 0 0 3px rgba(26,79,170,.1);}
+textarea.fc{resize:vertical;min-height:68px;}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.modal-ov.open{display:flex;}
+.modal{background:white;border-radius:14px;width:100%;max-width:580px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:slideUp .2s ease;}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-hdr{padding:16px 20px 12px;border-bottom:1px solid var(--borde);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--azul);}
+.modal-body{padding:16px 20px;}
+.modal-ftr{padding:12px 20px 16px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--borde);}
+.close-btn{background:none;border:none;color:var(--gt);cursor:pointer;font-size:20px;line-height:1;}
+
+/* WIZARD */
+.wizard{display:flex;margin-bottom:18px;border-radius:10px;overflow:hidden;border:1px solid var(--borde);}
+.wstep{flex:1;padding:9px 10px;display:flex;align-items:center;gap:7px;background:white;font-size:10px;font-weight:600;color:var(--gt);border-right:1px solid var(--borde);transition:all .2s;}
+.wstep:last-child{border-right:none;}
+.wstep.active{background:var(--azul);color:white;}
+.wstep.done{background:#F0FDF4;color:var(--verde);}
+.wnum{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;background:var(--borde);color:var(--gt);flex-shrink:0;}
+.wstep.active .wnum{background:rgba(255,255,255,.25);color:white;}
+.wstep.done .wnum{background:var(--verde);color:white;}
+.wpanel{display:none;} .wpanel.active{display:block;}
+
+/* PROF PILLS */
+.prof-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:14px;}
+.ppill{padding:10px 5px;border-radius:8px;border:2px solid var(--borde);text-align:center;cursor:pointer;transition:all .15s;background:white;}
+.ppill .em{font-size:20px;margin-bottom:3px;}
+.ppill .pn{font-size:10px;font-weight:600;}
+.ppill .ps{font-size:9px;color:var(--gt);margin-top:1px;}
+.ppill.kine:hover,.ppill.kine.sel{background:var(--kine-bg);border-color:var(--kine);color:var(--kine);}
+.ppill.psico:hover,.ppill.psico.sel{background:var(--psico-bg);border-color:var(--psico);color:var(--psico);}
+.ppill.nutri:hover,.ppill.nutri.sel{background:var(--nutri-bg);border-color:var(--nutri);color:var(--nutri);}
+.ppill.medico:hover,.ppill.medico.sel{background:var(--medico-bg);border-color:var(--medico);color:var(--medico);}
+.ppill.profis:hover,.ppill.profis.sel{background:var(--profis-bg);border-color:var(--profis);color:var(--profis);}
+
+/* HORARIOS */
+.hgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;}
+.hbtn{padding:8px 5px;border:1.5px solid var(--borde);border-radius:7px;background:white;font-size:11px;font-weight:600;color:var(--gt);cursor:pointer;text-align:center;transition:all .15s;}
+.hbtn:hover{border-color:var(--azul);color:var(--azul);background:#F0F4FF;}
+.hbtn.sel{border-color:var(--azul);background:var(--azul);color:white;}
+.hbtn.ocup{background:var(--gris);color:#CBD5E1;cursor:not-allowed;text-decoration:line-through;}
+.hbtn .hlbl{display:block;font-size:8px;opacity:.7;margin-top:1px;}
+
+/* CONFIRM */
+.cbox{background:var(--gris);border-radius:9px;padding:13px;margin-bottom:12px;border:1px solid var(--borde);}
+.crow{display:flex;justify-content:space-between;align-items:flex-start;padding:4px 0;font-size:12px;}
+.crow .ck{color:var(--gt);font-weight:500;}
+.crow .cv{font-weight:600;text-align:right;max-width:60%;}
+.cdiv{height:1px;background:var(--borde);margin:5px 0;}
+
+/* NOTIF BOXES */
+.nbox{border-radius:9px;padding:11px 13px;font-size:12px;border:1px solid;margin-top:10px;}
+.nbox.blue{background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;}
+.nbox.orange{background:#FFF7ED;border-color:#FED7AA;color:#9A3412;}
+.nbox.red{background:#FEF2F2;border-color:#FECACA;color:#991B1B;}
+.nbox.green{background:#F0FDF4;border-color:#BBF7D0;color:#166534;}
+
+/* EMAIL PREVIEW */
+.email-prev{border:1px solid var(--borde);border-radius:8px;overflow:hidden;margin-top:8px;}
+.email-hdr{background:var(--gris);padding:7px 11px;font-size:10px;color:var(--gt);border-bottom:1px solid var(--borde);}
+.email-bdy{padding:12px;font-size:12px;line-height:1.6;}
+
+/* TABS */
+.tabs{display:flex;gap:2px;border-bottom:2px solid var(--borde);margin-bottom:14px;}
+.tbtn{padding:7px 14px;font-size:12px;font-weight:600;color:var(--gt);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:'Inter',sans-serif;}
+.tbtn.active{color:var(--azul);border-bottom-color:var(--azul);}
+.tpanel{display:none;} .tpanel.active{display:block;}
+
+/* FILTERS */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.fsel{padding:6px 26px 6px 9px;border:1.5px solid var(--borde);border-radius:7px;font-size:12px;font-family:'Inter',sans-serif;color:var(--texto);background:white;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;cursor:pointer;}
+.fsel:focus{outline:none;border-color:var(--azul);}
+
+/* METRIC BARS */
+.mbar-wrap{margin-bottom:10px;}
+.mbar-lbl{display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin-bottom:3px;}
+.mbar-track{height:6px;background:var(--borde);border-radius:99px;overflow:hidden;}
+.mbar-fill{height:100%;border-radius:99px;}
+
+/* CHART */
+.chart-bars{display:flex;align-items:flex-end;gap:7px;height:110px;margin-top:8px;}
+.cbar-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end;}
+.cbar-col{width:100%;border-radius:4px 4px 0 0;min-height:4px;}
+.cbar-lbl{font-size:9px;color:var(--gt);font-weight:500;}
+.cbar-val{font-size:10px;font-weight:700;}
+
+/* SECTION LABEL */
+.slbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gt);margin-bottom:7px;}
+
+/* CALENDARIO */
+.cal-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--borde);}
+.cal-month{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--azul);}
+.cal-nav{display:flex;gap:4px;}
+.cnbtn{width:26px;height:26px;border:1.5px solid var(--borde);border-radius:5px;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--gt);}
+.cnbtn:hover{border-color:var(--azul);color:var(--azul);}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--borde);}
+.cdn{text-align:center;padding:6px;font-size:9px;font-weight:600;color:var(--gt);text-transform:uppercase;letter-spacing:.4px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);}
+.cal-cell{min-height:82px;border-right:1px solid var(--borde);border-bottom:1px solid var(--borde);padding:5px 4px 3px;cursor:pointer;transition:background .1s;}
+.cal-cell:nth-child(7n){border-right:none;}
+.cal-cell:hover{background:#F8F9FF;}
+.cal-cell.today .cal-date{background:var(--rojo);color:white;border-radius:50%;}
+.cal-cell.other .cal-date{color:#CBD5E1;}
+.cal-date{width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;margin-bottom:3px;}
+.calevent{display:block;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:600;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.calevent.susp{text-decoration:line-through;opacity:.55;}
+
+/* ALERTA */
+.alert{border-radius:9px;padding:11px 13px;display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;border:1.5px solid;}
+.alert.warn{background:#FFF7ED;border-color:#FED7AA;}
+.alert.err{background:#FEF2F2;border-color:#FECACA;}
+.alert-icon{font-size:16px;flex-shrink:0;}
+.alert-body{font-size:12px;}
+.alert-body b{display:block;font-size:13px;margin-bottom:2px;}
+
+/* SUSPENSION CARD */
+.susp-card{border:2px solid #FECACA;background:#FEF2F2;border-radius:9px;padding:13px;margin-bottom:12px;}
+.susp-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:var(--rojo);margin-bottom:7px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;color:white;padding:11px 16px;border-radius:9px;font-size:12px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;display:flex;align-items:center;gap:8px;max-width:360px;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* ATLETAS TABLE */
+.atleta-tag{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:600;}
+.tag-m{background:#DBEAFE;color:#1D4ED8;}
+.tag-f{background:#FCE7F3;color:#9D174D;}
+
+/* PANEL PERMISSION */
+.no-access{text-align:center;padding:60px 24px;color:var(--gt);}
+.no-access-icon{font-size:48px;margin-bottom:14px;}
+.no-access-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--texto);margin-bottom:6px;}
+</style>
+</head>
+<body>
+
+<!-- ==================== LOGIN ==================== -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">PC</div>
+    <div class="login-title">Promesas Chile</div>
+    <div class="login-sub">IND Región de Los Ríos · Sistema de Agendamiento</div>
+    <div class="profile-list" id="profile-list">
+      <div class="profile-btn" id="pb-admin" onclick="selectProfile('admin')">
+        <div class="profile-icon" style="background:#F3E8FF;">🛡️</div>
+        <div><div class="profile-name">Administrador</div><div class="profile-desc">Acceso total · agendamiento · reagendamiento · atletas · métricas</div></div>
+      </div>
+      <div class="profile-btn" id="pb-prof" onclick="selectProfile('profesional')">
+        <div class="profile-icon" style="background:#CFFAFE;">🩺</div>
+        <div><div class="profile-name">Profesional / EID</div><div class="profile-desc">Mi agenda · agendar y suspender mis propias citas</div></div>
+      </div>
+      <div class="profile-btn" id="pb-ent" onclick="selectProfile('entrenador')">
+        <div class="profile-icon" style="background:#FEF3C7;">🏋️</div>
+        <div><div class="profile-name">Técnico / Entrenador</div><div class="profile-desc">Solicitar horas para mis atletas · ver estado</div></div>
+      </div>
+    </div>
+    <div id="login-user-select" style="display:none;margin-bottom:16px;">
+      <div class="label" style="margin-bottom:6px;">Selecciona tu nombre</div>
+      <select class="fc" id="login-user-name" style="width:100%;"></select>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="doLogin()">Ingresar al sistema →</button>
+    <div class="login-note">Prototipo visual · sin autenticación real</div>
+  </div>
+</div>
+
+<!-- ==================== APP ==================== -->
+<div id="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <div class="tlogo">PC</div>
+      <div><div class="ttitle">Promesas Chile</div><div class="tsub">IND Los Ríos · 2026</div></div>
+    </div>
+    <div class="tnav" id="topnav"></div>
+    <div class="tuser">
+      <div style="text-align:right;">
+        <div style="font-size:12px;font-weight:600;" id="top-username">—</div>
+        <div class="role-chip" id="top-role">—</div>
+      </div>
+      <div class="avatar" id="top-avatar">?</div>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:white;border:none;" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div id="view-dashboard" class="view">
+      <div class="page-hdr">
+        <div><div class="page-title" id="dash-welcome">Dashboard</div><div class="page-sub">Viernes 12 de junio 2026 · IND Región de Los Ríos</div></div>
+        <div id="dash-action-btn"></div>
+      </div>
+      <div id="dash-alert" style="display:none;" class="alert warn">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-body"><b>Cita suspendida hoy: Lucas Agustin Zuñiga Levin — 09:00 · Kinesiología</b>Dr. Juan Manuel Guzmán suspendió esta atención. Se notificó al técnico César Barría y al apoderado.</div>
+        <button class="btn btn-sm btn-secondary" style="flex-shrink:0;margin-left:8px;" onclick="showView('citas')">Reagendar</button>
+      </div>
+      <div class="stats-grid" id="dash-stats"></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Atenciones de hoy</div><button class="btn btn-sm btn-secondary" onclick="showView('agenda')">Ver calendario</button></div>
+          <div style="overflow:hidden;border-radius:0 0 12px 12px;"><table>
+            <thead><tr><th>Hora</th><th>Beneficiario</th><th>Profesional</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="dash-today"></tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><div class="card-title">Atenciones junio — por disciplina</div></div>
+          <div class="card-body">
+            <div class="chart-bars">
+              <div class="cbar-item"><div class="cbar-val">8</div><div class="cbar-col" style="background:var(--kine);height:55%;"></div><div class="cbar-lbl">Kine</div></div>
+              <div class="cbar-item"><div class="cbar-val">5</div><div class="cbar-col" style="background:var(--psico);height:34%;"></div><div class="cbar-lbl">Psico</div></div>
+              <div class="cbar-item"><div class="cbar-val">11</div><div class="cbar-col" style="background:var(--nutri);height:76%;"></div><div class="cbar-lbl">Nutri</div></div>
+              <div class="cbar-item"><div class="cbar-val">3</div><div class="cbar-col" style="background:var(--medico);height:21%;"></div><div class="cbar-lbl">Médico</div></div>
+              <div class="cbar-item"><div class="cbar-val">14</div><div class="cbar-col" style="background:var(--profis);height:97%;"></div><div class="cbar-lbl">Prep.F</div></div>
+            </div>
+            <div style="margin-top:12px;">
+              <div class="mbar-wrap"><div class="mbar-lbl"><span style="color:var(--kine)">🦴 Kinesiología</span><span>8/20</span></div><div class="mbar-track"><div class="mbar-fill" style="width:40%;background:var(--kine)"></div></div></div>
+              <div class="mbar-wrap"><div class="mbar-lbl"><span style="color:var(--nutri)">🥗 Nutrición</span><span>11/20</span></div><div class="mbar-track"><div class="mbar-fill" style="width:55%;background:var(--nutri)"></div></div></div>
+              <div class="mbar-wrap"><div class="mbar-lbl"><span style="color:var(--profis)">💪 Prep. Física</span><span>14/20</span></div><div class="mbar-track"><div class="mbar-fill" style="width:70%;background:var(--profis)"></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== AGENDA ===== -->
+    <div id="view-agenda" class="view">
+      <div class="page-hdr">
+        <div><div class="page-title">Calendario de Atenciones</div><div class="page-sub" id="agenda-sub">Vista mensual</div></div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select class="fsel" id="cal-filter" onchange="renderCalendar()"><option value="">Todos</option><option value="kine">🦴 Kine</option><option value="psico">🧠 Psico</option><option value="nutri">🥗 Nutri</option><option value="medico">🩺 Médico</option><option value="profis">💪 Prep.F</option></select>
+          <button class="btn btn-primary" id="agenda-new-btn" onclick="openModal()" style="display:none;">+ Agendar Cita</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="cal-hdr">
+          <div class="cal-nav"><button class="cnbtn" onclick="changeMonth(-1)">‹</button><button class="cnbtn" onclick="changeMonth(1)">›</button></div>
+          <div class="cal-month" id="cal-month-lbl">Junio 2026</div>
+          <button class="btn btn-sm btn-secondary" onclick="goToday()">Hoy</button>
+        </div>
+        <div class="cal-days"><div class="cdn">Lun</div><div class="cdn">Mar</div><div class="cdn">Mié</div><div class="cdn">Jue</div><div class="cdn">Vie</div><div class="cdn">Sáb</div><div class="cdn">Dom</div></div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <div class="card"><div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:11px;font-weight:600;color:var(--gt);">Leyenda:</span>
+        <span class="badge b-kine">🦴 Kinesiología</span><span class="badge b-psico">🧠 Psicología</span>
+        <span class="badge b-nutri">🥗 Nutrición</span><span class="badge b-medico">🩺 Médico</span>
+        <span class="badge b-profis">💪 Prep.Física</span><span class="badge b-susp">⏸ Suspendida</span>
+      </div></div>
+    </div>
+
+    <!-- ===== GESTIÓN CITAS ===== -->
+    <div id="view-citas" class="view">
+      <div class="page-hdr">
+        <div><div class="page-title">Gestión de Citas</div><div class="page-sub">Historial · suspensiones · reagendamiento</div></div>
+        <button class="btn btn-primary" id="citas-new-btn" onclick="openModal()" style="display:none;">+ Agendar Cita</button>
+      </div>
+      <div class="filters">
+        <select class="fsel" id="f-estado"><option value="">Todos los estados</option><option>Confirmada</option><option>Pendiente</option><option>Suspendida</option><option>Completada</option></select>
+        <select class="fsel" id="f-disc"><option value="">Todos los profesionales</option><option>Kinesiología</option><option>Psicología</option><option>Nutrición</option><option>Médico</option><option>Prep. Física</option></select>
+        <select class="fsel" id="f-polo"><option value="">Todos los polos</option><option>Remo</option><option>Basketball</option><option>Judo</option><option>Natación</option><option>Atletismo</option><option>Gimnasia Rítmica</option><option>Vela</option></select>
+        <input type="text" class="fsel" placeholder="🔍 Buscar atleta..." style="min-width:160px;">
+      </div>
+      <div class="card"><div style="overflow:hidden;border-radius:12px;">
+        <table><thead><tr><th>Fecha/Hora</th><th>Atleta</th><th>Polo</th><th>Técnico</th><th>Profesional</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody id="citas-body"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- ===== ATLETAS ===== -->
+    <div id="view-atletas" class="view">
+      <div class="page-hdr">
+        <div><div class="page-title">Listado de Atletas</div><div class="page-sub">102 deportistas vigentes · Los Ríos 2026 · Fuente: Anexo 2.5 mayo</div></div>
+        <div style="display:flex;gap:8px;">
+          <select class="fsel" id="at-polo-f" onchange="renderAtletas()"><option value="">Todos los polos</option></select>
+          <select class="fsel" id="at-ent-f" onchange="renderAtletas()"><option value="">Todos los técnicos</option></select>
+          <select class="fsel" id="at-gen-f" onchange="renderAtletas()"><option value="">Todos</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option></select>
+          <input type="text" class="fsel" id="at-buscar" placeholder="🔍 Buscar..." style="min-width:150px;" oninput="renderAtletas()">
+        </div>
+      </div>
+      <div class="card"><div style="overflow:hidden;border-radius:12px;">
+        <table><thead><tr><th>#</th><th>Atleta</th><th>Polo deportivo</th><th>Etapa</th><th>Género</th><th>Técnico</th><th>Acciones</th></tr></thead>
+        <tbody id="atletas-body"></tbody></table>
+      </div></div>
+      <div style="margin-top:10px;font-size:11px;color:var(--gt);text-align:right;" id="atletas-count"></div>
+    </div>
+
+    <!-- ===== MÉTRICAS ===== -->
+    <div id="view-metricas" class="view">
+      <div class="page-hdr">
+        <div><div class="page-title">Métricas Mensuales</div><div class="page-sub">Solo visible para administradores</div></div>
+        <div style="display:flex;gap:8px;">
+          <select class="fsel" id="m-mes" onchange="renderMetricas()"><option value="6">Junio 2026</option><option value="5">Mayo 2026</option><option value="4">Abril 2026</option><option value="3">Marzo 2026</option></select>
+          <button class="btn btn-secondary">📥 Exportar PDF</button>
+        </div>
+      </div>
+      <div class="stats-grid" id="met-stats"></div>
+      <div class="grid-2">
+        <div class="card"><div class="card-hdr"><div class="card-title">Por disciplina</div></div><div class="card-body" id="met-disc"></div></div>
+        <div class="card"><div class="card-hdr"><div class="card-title">Por polo deportivo</div></div><div class="card-body" id="met-polo"></div></div>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-hdr"><div class="card-title">Evolución mensual</div></div>
+        <div class="card-body"><div class="chart-bars" id="met-evo" style="height:130px;"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Detalle por profesional</div><button class="btn btn-sm btn-secondary">📥 CSV</button></div>
+        <div style="overflow:hidden;border-radius:0 0 12px 12px;">
+          <table><thead><tr><th>Profesional</th><th>Disciplina</th><th>Total</th><th>Realizadas</th><th>Suspendidas</th><th>% Asistencia</th></tr></thead>
+          <tbody id="met-tabla"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+  
+    <!-- ===== INTEGRACIÓN ===== -->
+    <div id="view-integracion" class="view">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Integración Google Calendar + Gmail</div>
+          <div class="page-subtitle">Guía paso a paso · Google Apps Script · sin costo de servidor</div>
+        </div>
+        <span class="badge badge-confirmada" style="font-size:12px;padding:6px 14px;">✅ Gratis con cuenta Google</span>
+      </div>
+
+      <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:14px 16px;font-size:13px;color:#1E40AF;margin-bottom:20px;">
+        <b>¿Cómo funciona?</b> Google Apps Script es un backend gratuito alojado en tu cuenta Google. Recibe los datos del formulario y: (1) crea el evento en Google Calendar del profesional, (2) envía emails al técnico y apoderado, (3) registra la cita en Google Sheets.
+      </div>
+
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-header"><div class="card-title">Pasos para activar la integración</div></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:18px;">
+
+          <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--gris-borde);">
+            <div style="width:32px;height:32px;border-radius:50%;background:#DBEAFE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">1</div>
+            <div>
+              <div style="font-weight:700;font-size:13px;margin-bottom:4px;">Abrir Google Apps Script</div>
+              <div style="font-size:12px;color:var(--gris-texto);">Ve a <a href="https://script.google.com" target="_blank" style="color:#1D4ED8;"><b>script.google.com</b></a> con la cuenta Google del administrador. Haz clic en <b>Nuevo proyecto</b> y nómbralo <b>Agenda Promesas Chile</b>.</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--gris-borde);">
+            <div style="width:32px;height:32px;border-radius:50%;background:#DCFCE7;color:#15803D;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">2</div>
+            <div>
+              <div style="font-weight:700;font-size:13px;margin-bottom:4px;">Pegar el código del backend</div>
+              <div style="font-size:12px;color:var(--gris-texto);">Descarga el archivo <b>AgendaPromemasChile_GAS.js</b> que generamos. Borra el contenido del editor en script.google.com y pega todo el código. Guarda con Ctrl+S.</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--gris-borde);">
+            <div style="width:32px;height:32px;border-radius:50%;background:#FEF3C7;color:#92400E;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">3</div>
+            <div>
+              <div style="font-weight:700;font-size:13px;margin-bottom:4px;">Crear Google Sheets como base de datos</div>
+              <div style="font-size:12px;color:var(--gris-texto);">Ve a <a href="https://sheets.google.com" target="_blank" style="color:#1D4ED8;"><b>sheets.google.com</b></a> y crea una hoja llamada <b>Agenda Promesas Chile</b>. Copia el ID de la URL (la parte larga entre /d/ y /edit) y reemplaza el valor de <code>sheetId</code> en el código.</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--gris-borde);">
+            <div style="width:32px;height:32px;border-radius:50%;background:#FEE2E2;color:#B91C1C;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">4</div>
+            <div>
+              <div style="font-weight:700;font-size:13px;margin-bottom:4px;">Actualizar correos de los profesionales</div>
+              <div style="font-size:12px;color:var(--gris-texto);">En el bloque <code>CONFIG.profesionales</code> del código, reemplaza los correos de ejemplo con los correos Gmail reales de cada uno:</div>
+              <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;">
+                <div style="font-size:12px;"><span class="badge badge-kine">🦴 Kine</span> Kin. Catalina Camino → <input type="email" class="form-control" placeholder="catalina.camino@gmail.com" id="email-kine" style="width:220px;display:inline-block;padding:4px 8px;font-size:11px;"></div>
+                <div style="font-size:12px;margin-top:4px;"><span class="badge badge-psico">🧠 Psico</span> Ps. Mario Pidal → <input type="email" class="form-control" placeholder="mario.pidal@gmail.com" id="email-psico" style="width:220px;display:inline-block;padding:4px 8px;font-size:11px;"></div>
+                <div style="font-size:12px;margin-top:4px;"><span class="badge badge-nutri">🥗 Nutri</span> Nut. Josefina Henríquez → <input type="email" class="form-control" placeholder="josefina.henriquez@gmail.com" id="email-nutri" style="width:220px;display:inline-block;padding:4px 8px;font-size:11px;"></div>
+                <div style="font-size:12px;margin-top:4px;"><span class="badge badge-medico">🩺 Médico</span> Dr. Juan Manuel Guzmán → <input type="email" class="form-control" placeholder="jm.guzman@gmail.com" id="email-medico" style="width:220px;display:inline-block;padding:4px 8px;font-size:11px;"></div>
+                <div style="font-size:12px;margin-top:4px;"><span class="badge badge-profis">💪 Prep.F</span> Prof. Matías Péndola → <input type="email" class="form-control" placeholder="matias.pendola@gmail.com" id="email-profis" style="width:220px;display:inline-block;padding:4px 8px;font-size:11px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--gris-borde);">
+            <div style="width:32px;height:32px;border-radius:50%;background:#EDE9FE;color:#7C3AED;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">5</div>
+            <div>
+              <div style="font-weight:700;font-size:13px;margin-bottom:4px;">Desplegar como aplicación web</div>
+              <div style="font-size:12px;color:var(--gris-texto);">En el editor de Apps Script: <b>Implementar → Nueva implementación → Aplicación web</b><br>
+              · <b>Ejecutar como:</b> Yo<br>
+              · <b>Quién tiene acceso:</b> Cualquier persona<br>
+              Haz clic en <b>Implementar</b>, autoriza los permisos y copia la URL generada.</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:14px;align-items:flex-start;">
+            <div style="width:32px;height:32px;border-radius:50%;background:#DCFCE7;color:#15803D;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">6</div>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:13px;margin-bottom:4px;">Pegar la URL y probar</div>
+              <div style="font-size:12px;color:var(--gris-texto);margin-bottom:10px;">Pega la URL de Apps Script aquí abajo y haz clic en <b>Guardar URL</b>. Luego prueba con el botón de abajo.</div>
+              <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <input type="text" id="gas-url-input" class="form-control" placeholder="https://script.google.com/macros/s/AKfyc.../exec" style="flex:1;font-size:12px;">
+                <button class="btn btn-primary" onclick="guardarGasUrl()">💾 Guardar URL</button>
+              </div>
+              <div id="gas-url-status" style="margin-bottom:12px;"></div>
+              <button class="btn btn-secondary" onclick="testIntegracion()" id="btn-test-gas">🧪 Enviar cita de prueba</button>
+              <div id="gas-test-result" style="margin-top:10px;"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ==================== MODAL AGENDAR ==================== -->
+<div class="modal-ov" id="modal-ov" onclick="if(event.target===this)closeModal()">
+<div class="modal">
+  <div class="modal-hdr"><div class="modal-title">Agendar Nueva Cita</div><button class="close-btn" onclick="closeModal()">×</button></div>
+  <div class="modal-body">
+    <div class="wizard" id="wiz">
+      <div class="wstep active" id="ws1"><div class="wnum" id="wn1">1</div><span>Profesional</span></div>
+      <div class="wstep" id="ws2"><div class="wnum" id="wn2">2</div><span>Atleta</span></div>
+      <div class="wstep" id="ws3"><div class="wnum" id="wn3">3</div><span>Fecha/Hora</span></div>
+      <div class="wstep" id="ws4"><div class="wnum" id="wn4">4</div><span>Confirmar</span></div>
+    </div>
+    <!-- P1 PROFESIONAL -->
+    <div class="wpanel active" id="wp1">
+      <div class="slbl">Selecciona el profesional</div>
+      <div class="prof-grid">
+        <div class="ppill kine" onclick="selProf('kine','🦴 Kinesiología','Kin. Catalina Camino',this)"><div class="em">🦴</div><div class="pn">Kinesiología</div><div class="ps">Kin. C. Camino</div></div>
+        <div class="ppill psico" onclick="selProf('psico','🧠 Psicología','Ps. Mario Pidal',this)"><div class="em">🧠</div><div class="pn">Psicología</div><div class="ps">Ps. M. Pidal</div></div>
+        <div class="ppill nutri" onclick="selProf('nutri','🥗 Nutrición','Nut. Josefina Henríquez',this)"><div class="em">🥗</div><div class="pn">Nutrición</div><div class="ps">Nut. J. Henríquez</div></div>
+        <div class="ppill medico" onclick="selProf('medico','🩺 Médico','Dr. Juan Manuel Guzmán',this)"><div class="em">🩺</div><div class="pn">Médico</div><div class="ps">Kin. C. Camino</div></div>
+        <div class="ppill profis" onclick="selProf('profis','💪 Prep. Física','Prof. Matías Péndola',this)"><div class="em">💪</div><div class="pn">Prep. Física</div><div class="ps">Prof. M. Péndola</div></div>
+      </div>
+      <div id="prof-sel-info" style="display:none;" class="nbox blue">✅ <span id="prof-sel-txt"></span></div>
+    </div>
+    <!-- P2 ATLETA -->
+    <div class="wpanel" id="wp2">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="label">Polo deportivo <span>*</span></label>
+          <select class="fc" id="f-polo-m" onchange="onPoloChange()">
+            <option value="">Seleccionar polo...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="label">Atleta / Beneficiario <span>*</span></label>
+          <select class="fc" id="f-atleta" onchange="onAtletaChange()"><option value="">Primero selecciona polo...</option></select>
+        </div>
+        <div class="form-group" id="tecnico-row">
+          <label class="label">Técnico solicitante <span>*</span></label>
+          <select class="fc" id="f-tecnico" onchange="autoFillTecEmail()"><option value="">Seleccionar...</option></select>
+        </div>
+        <div class="form-group" id="tecnico-email-row">
+          <label class="label">Correo técnico</label>
+          <input type="email" class="fc" id="f-tecnico-email" placeholder="tecnico@promesaschile.cl">
+        </div>
+        <div class="form-group">
+          <label class="label">Apoderado <span>*</span></label>
+          <input type="text" class="fc" id="f-apoderado" placeholder="Nombre del apoderado">
+        </div>
+        <div class="form-group">
+          <label class="label">Correo apoderado <span>*</span></label>
+          <input type="email" class="fc" id="f-email-apod" placeholder="apoderado@correo.cl">
+        </div>
+        <div class="form-group full">
+          <label class="label">Motivo de la atención</label>
+          <textarea class="fc" id="f-motivo" placeholder="Describe el motivo de la derivación..."></textarea>
+        </div>
+      </div>
+    </div>
+    <!-- P3 FECHA/HORA -->
+    <div class="wpanel" id="wp3">
+      <div class="form-grid" style="margin-bottom:12px;">
+        <div class="form-group"><label class="label">Fecha <span>*</span></label><input type="date" class="fc" id="f-fecha" onchange="updateHorarios()"></div>
+        <div class="form-group"><label class="label">Duración del bloqueo</label><select class="fc" disabled style="background:var(--gris);color:var(--gt);"><option>60 minutos (fijo)</option></select></div>
+      </div>
+      <div class="slbl">Horarios disponibles · cada 30 min · bloquea 60 min</div>
+      <div class="hgrid" id="hgrid"><div style="grid-column:1/-1;text-align:center;color:var(--gt);padding:20px;font-size:13px;">Selecciona una fecha primero</div></div>
+      <div class="nbox blue" style="margin-top:10px;">📅 El horario seleccionado bloqueará <b>60 minutos</b> en el Google Calendar del profesional.</div>
+    </div>
+    <!-- P4 CONFIRMAR -->
+    <div class="wpanel" id="wp4">
+      <div class="slbl">Resumen de la cita</div>
+      <div class="cbox">
+        <div class="crow"><span class="ck">Profesional</span><span class="cv" id="c-prof">—</span></div>
+        <div class="cdiv"></div>
+        <div class="crow"><span class="ck">Atleta</span><span class="cv" id="c-atleta">—</span></div>
+        <div class="crow"><span class="ck">Polo</span><span class="cv" id="c-polo">—</span></div>
+        <div class="crow"><span class="ck">Técnico</span><span class="cv" id="c-tec">—</span></div>
+        <div class="crow"><span class="ck">Apoderado</span><span class="cv" id="c-apod">—</span></div>
+        <div class="cdiv"></div>
+        <div class="crow"><span class="ck">Fecha y hora</span><span class="cv" id="c-fecha">—</span></div>
+        <div class="crow"><span class="ck">Bloqueo</span><span class="cv">60 minutos</span></div>
+        <div class="cdiv"></div>
+        <div class="crow"><span class="ck">Motivo</span><span class="cv" id="c-motivo">—</span></div>
+      </div>
+      <div class="tabs">
+        <button class="tbtn active" onclick="switchTab('tab-tec',this)">📨 Email técnico</button>
+        <button class="tbtn" onclick="switchTab('tab-apod',this)">📧 Email apoderado</button>
+        <button class="tbtn" onclick="switchTab('tab-gcal',this)">📅 Google Calendar</button>
+      </div>
+      <div class="tpanel active" id="tab-tec">
+        <div class="email-prev"><div class="email-hdr"><b>Para:</b> <span id="prev-email-tec">—</span> &nbsp;|&nbsp; <b>Asunto:</b> Solicitud de cita registrada — Promesas Chile</div><div class="email-bdy" id="prev-body-tec"></div></div>
+      </div>
+      <div class="tpanel" id="tab-apod">
+        <div class="email-prev"><div class="email-hdr"><b>Para:</b> <span id="prev-email-apod">—</span> &nbsp;|&nbsp; <b>Asunto:</b> Confirmación de cita — Promesas Chile</div><div class="email-bdy" id="prev-body-apod"></div></div>
+      </div>
+      <div class="tpanel" id="tab-gcal">
+        <div class="nbox blue" style="margin-top:0;"><b>📅 Evento a crear en Google Calendar:</b><br>Se bloqueará 60 minutos en el calendario de <b><span id="prev-gcal-prof">—</span></b> con el nombre del atleta, motivo y datos del técnico. Nadie más podrá agendar en ese horario.</div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-ftr">
+    <button class="btn btn-secondary" id="btn-prev" onclick="prevStep()" style="display:none;">← Anterior</button>
+    <button class="btn btn-primary" id="btn-next" onclick="nextStep()">Siguiente →</button>
+  </div>
+</div></div>
+
+<!-- ==================== MODAL SUSPENDER ==================== -->
+<div class="modal-ov" id="susp-ov" onclick="if(event.target===this)closeSusp()">
+<div class="modal" style="max-width:460px;">
+  <div class="modal-hdr"><div class="modal-title" style="color:var(--rojo);">⏸ Suspender Cita</div><button class="close-btn" onclick="closeSusp()">×</button></div>
+  <div class="modal-body">
+    <div class="susp-card">
+      <div class="susp-title">⚠️ Cita a suspender</div>
+      <div class="crow"><span class="ck">Atleta</span><span class="cv" id="s-atleta">—</span></div>
+      <div class="crow"><span class="ck">Hora</span><span class="cv" id="s-hora">—</span></div>
+      <div class="crow"><span class="ck">Disciplina</span><span class="cv" id="s-disc">—</span></div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label class="label">Motivo de suspensión <span style="color:var(--rojo);">*</span></label>
+      <select class="fc" id="s-motivo"><option value="">Seleccionar...</option><option>Enfermedad o ausencia del profesional</option><option>Urgencia institucional</option><option>Solicitud del apoderado</option><option>Fuerza mayor</option><option>Otro</option></select>
+    </div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label class="label">Detalle adicional</label>
+      <textarea class="fc" id="s-detalle" placeholder="Explica el motivo y si hay fecha propuesta de reagendamiento..."></textarea>
+    </div>
+    <div class="nbox red"><b>⚠️ Al confirmar se enviará automáticamente:</b>📨 Al técnico: aviso de suspensión.<br>📧 Al apoderado: notificación con disculpas.<br>📅 El horario queda libre en Google Calendar del profesional.</div>
+  </div>
+  <div class="modal-ftr"><button class="btn btn-secondary" onclick="closeSusp()">Cancelar</button><button class="btn btn-danger" onclick="confirmSusp()">⏸ Confirmar Suspensión</button></div>
+</div></div>
+
+<!-- ==================== MODAL REAGENDAR (solo admin) ==================== -->
+<div class="modal-ov" id="reagendar-ov" onclick="if(event.target===this)closeReagendar()">
+<div class="modal" style="max-width:440px;">
+  <div class="modal-hdr"><div class="modal-title" style="color:var(--azul);">📅 Reagendar Cita</div><button class="close-btn" onclick="closeReagendar()">×</button></div>
+  <div class="modal-body">
+    <div class="nbox blue" style="margin-top:0;margin-bottom:14px;"><b>Reagendando:</b> <span id="r-atleta">—</span><br><b>Disciplina:</b> <span id="r-disc">—</span></div>
+    <div class="form-grid">
+      <div class="form-group"><label class="label">Nueva fecha <span style="color:var(--rojo)">*</span></label><input type="date" class="fc" id="r-fecha" onchange="updateReagendarHorarios()"></div>
+      <div class="form-group"><label class="label">Motivo del cambio</label><input type="text" class="fc" id="r-motivo" placeholder="Ej: solicitud técnico"></div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="slbl">Nuevo horario</div>
+      <div class="hgrid" id="r-hgrid"><div style="grid-column:1/-1;text-align:center;color:var(--gt);padding:14px;font-size:13px;">Selecciona una fecha primero</div></div>
+    </div>
+  </div>
+  <div class="modal-ftr"><button class="btn btn-secondary" onclick="closeReagendar()">Cancelar</button><button class="btn btn-verde" onclick="confirmReagendar()">✅ Confirmar Reagendamiento</button></div>
+</div></div>
+
+<div class="toast" id="toast"><span id="t-icon">✅</span><span id="t-msg">OK</span></div>
+
+<script>
+// ==================== DATOS REALES ====================
+const POLOS_DATA = {"Remo":{"atletas":[{"nombre":"Alex Watt Martinez","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Alonso Gutierrez Gomez","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Alonso Matias Sanchez Erices","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Alonso Nail Carvajal","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Alvaro Corales Loyola","genero":"Masculino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Amaya Nazal Rodriguez","genero":"Femenino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Anastazia Nazal Rodriguez","genero":"Femenino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Angela Navarrete Pineda","genero":"Femenino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Antonella Noches Carter","genero":"Femenino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Antonia Nicolle Pinchulaf Galeano","genero":"Femenino","etapa":"Infantil","entrenador":"Ignacio Andrés Silva Becerra"},{"nombre":"Augusto Maximilian Fuentes Morales","genero":"Masculino","etapa":"Infantil","entrenador":"Ignacio Andrés Silva Becerra"},{"nombre":"Benjamin Salas Jerez","genero":"Masculino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Camila Contreras Fuentes","genero":"Femenino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Camila Fernanadez Antri","genero":"Femenino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Camilo Soto Pozas","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Clemente Alvarez Gonzalez","genero":"Masculino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Colomba Wilson Gonzalez","genero":"Femenino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Cristobal Cartagena Aravena","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Cristobal Nuñez Muñoz","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Daniel Rocha Twele","genero":"Masculino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Domingo Sepulveda Horn","genero":"Masculino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Fernanda Peñailillo Aravena","genero":"Femenino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Francisco Celedon Ascencio","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Franco Criado Cuevas","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Franco Guarda Quezada","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Gwenaelle Serandour Evans","genero":"Femenino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Ivanna Maldonado Rojas","genero":"Femenino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Javiera Valenzuela Meza","genero":"Femenino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Juan Jose Labatut Rademacher","genero":"Masculino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Lucas Jimenez Tapia","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Lucas Sacnhez Cid","genero":"Masculino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Luciano Azurmendi Oyarzun","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Manuel Antonio Silva Faure","genero":"Masculino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Martin Lopez Cartagena","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Martina Estrella Olivares Delgado","genero":"Femenino","etapa":"Infantil","entrenador":"Ignacio Andrés Silva Becerra"},{"nombre":"Mateo Aguilera Cardoch","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Mateo Bustos Hewstone","genero":"Masculino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Matias Arteaga Calfueque","genero":"Masculino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Matias Lican Sepulveda Caniulaf","genero":"Masculino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Matilda Mendez Zuñiga","genero":"Femenino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Micaela Hoffmann Ocaranza","genero":"Femenino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Nicolas Cid Martinez","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Oliver Guillermo Contreras Fuentes","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Paloma Pulgar Rivera","genero":"Femenino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Rafael Aravena Vergara","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Samuel Ruiz Cortez","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Sofia Flandez Quiroz","genero":"Femenino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Vaneza Garrido Medina","genero":"Femenino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Vicente Quezada Fernandez","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Yenzo San Feliu Vargas","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"}],"entrenadores":["Cristian Marcelo Astete Miranda","Ignacio Andrés Silva Becerra","Miguel Cerda","Nelson Morales Poblete","Patricio Barrera Alarcon"]},"Basketball":{"atletas":[{"nombre":"Cameron Martin Bichop Torres","genero":"Masculino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Clemente Agustin Rosas Rios","genero":"Masculino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Emilio Alberto Valenzuela Vega","genero":"Masculino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Jeremy Yeraldo Alvarez Gaete","genero":"Masculino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Leon Franco Sanchez Rivera","genero":"Masculino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Liliana Grace Staley Navarro","genero":"Femenino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Lucas Agustin Zuñiga Levin","genero":"Masculino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Maite Lourdes Mera Pulquillanca","genero":"Femenino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Martina Soledad Catricheo Suarez","genero":"Femenino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Moira Belen Castro Flores","genero":"Femenino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Nataly Fabiana Carrera Hidalgo","genero":"Femenino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Olivia Paz Prutzmann Oyarzo","genero":"Femenino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"}],"entrenadores":["Cesar Barria Vargas"]},"Judo":{"atletas":[{"nombre":"Abigail Sofía Cifuentes Bustos","genero":"Femenino","etapa":"Infantil","entrenador":"Hernán Alejandro Chavarría Cuevas"},{"nombre":"Alex Daniel Moraga Belmar","genero":"Masculino","etapa":"Infantil","entrenador":"Hernán Alejandro Chavarría Cuevas"},{"nombre":"Anaís Sofia Vargas Zuñiga","genero":"Femenino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Cristobal Nahuel Galvez Perez","genero":"Masculino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Eydan Felipe Segovia Sepúlveda","genero":"Masculino","etapa":"Infantil","entrenador":"Hernán Alejandro Chavarría Cuevas"},{"nombre":"Fernanda Sayen Villablanca Troncoso","genero":"Femenino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Gaspar Vasquez Gonzales","genero":"Masculino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Ignacia Sánchez Baeza","genero":"Femenino","etapa":"Infantil","entrenador":"Hernán Alejandro Chavarría Cuevas"},{"nombre":"Ignacio Abraham Torres Runil","genero":"Masculino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Josefa Emilia Torres Martinez","genero":"Femenino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Leonor Irene Salvatierra Gutierrez","genero":"Femenino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Martin Alexander Muñoz Bustamante","genero":"Masculino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Monserrat Ignacia Marcos Delgado","genero":"Femenino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Priscilla Garrido Ovalle","genero":"Femenino","etapa":"Infantil","entrenador":"Hernán Alejandro Chavarría Cuevas"},{"nombre":"Rayen Sayra Castro Caman","genero":"Femenino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Sait Jeremias Baez Chavez","genero":"Masculino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Victor Andres Martinez Martinez","genero":"Masculino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"}],"entrenadores":["Gustavo Miranda Rivera","Hernán Alejandro Chavarría Cuevas"]},"Natación":{"atletas":[{"nombre":"Agustin Chacano Obando","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Agustina Robles Valenzuela","genero":"Femenino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Alonso Tomas Angulo Rojas","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Diego Rodriguez Navarro","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Eloisa Francisca Godoy Vargas","genero":"Femenino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Gaspar Efrain Silva Diaz","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Isabella Leonor Peña Balboa","genero":"Femenino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Isidora Anais Toledo Soto","genero":"Femenino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Jean Marco Cedeño Gallardo","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Juan Jose Concha Rivera","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Pascal Alonso Godoy Vargas","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Vicente Alejandro Silva Silva","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"}],"entrenadores":["Angela Parra"]},"Atletismo":{"atletas":[{"nombre":"Catalina Alejandra Heilenkotter Carrasco","genero":"Femenino","etapa":"U23 Adulto","entrenador":"Eduardo Antonio Mera Messi"},{"nombre":"Isidora Betzabe Dias Gonzalez","genero":"Femenino","etapa":"Juvenil","entrenador":"Israel Eliseo Saez Molina"},{"nombre":"Joaquin Ignacio Prosser Tejeda","genero":"Masculino","etapa":"Juvenil","entrenador":"Israel Eliseo Saez Molina"},{"nombre":"Martin Alonso Alvayay Gonzalez","genero":"Masculino","etapa":"Juvenil","entrenador":"Israel Eliseo Saez Molina"},{"nombre":"Pilar Andrea Ardiles Reyes","genero":"Femenino","etapa":"Juvenil","entrenador":"Israel Eliseo Saez Molina"},{"nombre":"Sofia Andrea Fierro Donoso","genero":"Femenino","etapa":"Juvenil","entrenador":"Israel Eliseo Saez Molina"},{"nombre":"Sofía Magdalena Araya Villanueva","genero":"Femenino","etapa":"Junior","entrenador":"Juan Luis Gajardo"},{"nombre":"Valentina Antonella Cancino Troncoso","genero":"Femenino","etapa":"Juvenil","entrenador":"Israel Eliseo Saez Molina"}],"entrenadores":["Eduardo Antonio Mera Messi","Israel Eliseo Saez Molina","Juan Luis Gajardo"]},"Gimnasia Rítmica":{"atletas":[{"nombre":"Paula Antonia Hernández González","genero":"Femenino","etapa":"Junior","entrenador":"Gustavo Cárcamo"},{"nombre":"Trinidad Almendra Urrutia Andía","genero":"Femenino","etapa":"Senior","entrenador":"Gustavo Cárcamo Cárcamo"}],"entrenadores":["Gustavo Cárcamo","Gustavo Cárcamo Cárcamo"]},"Vela":{"atletas":[{"nombre":"Agustina Jordan Jordan Von Appen","genero":"Femenino","etapa":"Adulto","entrenador":"Agustin Bellocchio"}],"entrenadores":["Agustin Bellocchio"]}};
+
+const PERFILES = {
+  admin: {label:'Administrador', icon:'🛡️', badge:'b-adm', views:['dashboard','agenda','citas','atletas','metricas','integracion'], initials:'AD'},
+  profesional: {label:'Profesional / EID', icon:'🩺', badge:'b-prof', views:['dashboard','disponibilidad','agenda','citas'], initials:'EID'},
+  entrenador: {label:'Técnico / Entrenador', icon:'🏋️', badge:'b-ent', views:['dashboard','agenda','citas'], initials:'TC'},
+};
+
+const NAV_LABELS = {dashboard:'Dashboard', disponibilidad:'Mi Disponibilidad', agenda:'Agenda', citas:'Gestión de Citas', atletas:'Atletas', metricas:'Métricas', integracion:'🔌 Integración'};
+
+const PROFESIONALES_EID = ['Kin. Catalina Camino','Ps. Mario Pidal (Psicología)','Nut. Josefina Henríquez (Nutrición)','Dr. Juan Manuel Guzmán (Médico)','Prof. Matías Péndola (Prep. Física)'];
+
+let currentProfile = null, currentUser = null;
+
+// ===== LOGIN =====
+let selectedLoginProfile = null;
+function selectProfile(p) {
+  selectedLoginProfile = p;
+  document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('pb-'+p).classList.add('selected');
+  const sel = document.getElementById('login-user-name');
+  sel.innerHTML = '';
+  const usel = document.getElementById('login-user-select');
+  if(p === 'profesional') {
+    usel.style.display = '';
+    PROFESIONALES_EID.forEach(n => sel.innerHTML += `<option>${n}</option>`);
+  } else if(p === 'entrenador') {
+    usel.style.display = '';
+    const ents = new Set();
+    Object.values(POLOS_DATA).forEach(polo => polo.entrenadores.forEach(e => ents.add(e)));
+    [...ents].sort().forEach(n => sel.innerHTML += `<option>${n}</option>`);
+  } else {
+    usel.style.display = 'none';
+  }
+}
+
+function doLogin() {
+  if(!selectedLoginProfile) { alert('Selecciona un perfil'); return; }
+  currentProfile = selectedLoginProfile;
+  currentUser = currentProfile === 'admin' ? 'Administrador' : document.getElementById('login-user-name').value;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  setupApp();
+}
+
+function doLogout() {
+  currentProfile = null; currentUser = null; selectedLoginProfile = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('login-user-select').style.display = 'none';
+}
+
+function setupApp() {
+  const p = PERFILES[currentProfile];
+  document.getElementById('top-username').textContent = currentUser;
+  document.getElementById('top-role').textContent = p.icon + ' ' + p.label;
+  document.getElementById('top-avatar').textContent = p.initials;
+  // nav
+  const nav = document.getElementById('topnav');
+  nav.innerHTML = '';
+  p.views.forEach(v => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-btn';
+    btn.textContent = NAV_LABELS[v];
+    btn.onclick = () => showView(v);
+    btn.dataset.view = v;
+    nav.appendChild(btn);
+  });
+  // populate polo dropdowns
+  populatePoloDropdowns();
+  // populate tecnico dropdown in modal
+  populateTecnicoDropdown();
+  showView('dashboard');
+}
+
+function populatePoloDropdowns() {
+  ['f-polo-m','at-polo-f'].forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const first = el.options[0].value === '' ? el.options[0] : null;
+    el.innerHTML = '';
+    if(first) el.appendChild(first); else { const o=document.createElement('option');o.value='';o.textContent='Todos los polos';el.appendChild(o); }
+    Object.keys(POLOS_DATA).forEach(polo => {
+      const o = document.createElement('option');
+      o.value = polo; o.textContent = polo;
+      el.appendChild(o);
+    });
+  });
+  // populate atleta filter entrenadores
+  const entF = document.getElementById('at-ent-f');
+  if(entF) {
+    entF.innerHTML = '<option value="">Todos los técnicos</option>';
+    const ents = new Set();
+    Object.values(POLOS_DATA).forEach(p => p.entrenadores.forEach(e => ents.add(e)));
+    [...ents].sort().forEach(e => { const o=document.createElement('option');o.value=e;o.textContent=e;entF.appendChild(o); });
+  }
+}
+
+function populateTecnicoDropdown() {
+  const sel = document.getElementById('f-tecnico');
+  sel.innerHTML = '<option value="">Seleccionar...</option>';
+  const ents = new Set();
+  Object.values(POLOS_DATA).forEach(p => p.entrenadores.forEach(e => ents.add(e)));
+  [...ents].sort().forEach(e => { const o=document.createElement('option');o.value=e;o.textContent=e;sel.appendChild(o); });
+}
+
+// ===== VIEWS =====
+const allViews = ['dashboard','agenda','citas','atletas','metricas'];
+function showView(v) {
+  allViews.forEach(x => document.getElementById('view-'+x)?.classList.remove('active'));
+  document.getElementById('view-'+v)?.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+  const p = PERFILES[currentProfile];
+  if(v==='dashboard') setupDashboard();
+  if(v==='agenda') { setupAgenda(); renderCalendar(); }
+  if(v==='citas') { setupCitas(); renderCitas(); }
+  if(v==='atletas') renderAtletas();
+  if(v==='metricas') renderMetricas();
+  if(v==='integracion') updateGasStatus();
+}
+
+// ===== DASHBOARD =====
+const TODAY_CITAS = [
+  {hora:'09:00',atleta:'Lucas Agustin Zuñiga Levin',polo:'Basketball',tec:'Cesar Barria Vargas',prof:'kine',profNom:'🦴 Kine',estado:'suspendida'},
+  {hora:'10:30',atleta:'Amaya Nazal Rodriguez',polo:'Remo',tec:'Miguel Cerda',prof:'nutri',profNom:'🥗 Nutri',estado:'confirmada'},
+  {hora:'11:00',atleta:'Mateo Aguilera Cardoch',polo:'Remo',tec:'Miguel Cerda',prof:'profis',profNom:'💪 Prep.F',estado:'confirmada'},
+  {hora:'14:00',atleta:'Eydan Felipe Segovia Sepúlveda',polo:'Judo',tec:'Hernán Chavarría',prof:'psico',profNom:'🧠 Psico',estado:'pendiente'},
+  {hora:'15:30',atleta:'Martin Alonso Alvayay Gonzalez',polo:'Atletismo',tec:'Israel Saez',prof:'medico',profNom:'🩺 Médico',estado:'confirmada'},
+];
+function setupDashboard() {
+  const p = PERFILES[currentProfile];
+  document.getElementById('dash-welcome').textContent = 'Bienvenido/a, ' + currentUser + ' 👋';
+  // stats
+  const stats = document.getElementById('dash-stats');
+  const sd = [{key:'kine',lbl:'Kinesiología',ico:'🦴',n:8},{key:'psico',lbl:'Psicología',ico:'🧠',n:5},{key:'nutri',lbl:'Nutrición',ico:'🥗',n:11},{key:'medico',lbl:'Médico',ico:'🩺',n:3},{key:'profis',lbl:'Prep. Física',ico:'💪',n:14}];
+  stats.innerHTML = sd.map(s=>`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.key}-bg)">${s.ico}</div><div class="stat-num" style="color:var(--${s.key})">${s.n}</div><div class="stat-lbl">${s.lbl}</div></div>`).join('');
+  // alert solo admin y prof
+  document.getElementById('dash-alert').style.display = currentProfile !== 'entrenador' ? '' : 'none';
+  // accion
+  const ab = document.getElementById('dash-action-btn');
+  ab.innerHTML = currentProfile !== 'entrenador' ? `<button class="btn btn-primary" onclick="openModal()">+ Agendar Cita</button>` : `<button class="btn btn-primary" onclick="openModal()">+ Solicitar Hora</button>`;
+  // tabla hoy
+  const tbody = document.getElementById('dash-today');
+  const eb={suspendida:'b-susp',confirmada:'b-conf',pendiente:'b-pend',completada:'b-comp'};
+  const el={suspendida:'⏸ Suspendida',confirmada:'Confirmada',pendiente:'Pendiente',completada:'Completada'};
+  let filtered = TODAY_CITAS;
+  if(currentProfile === 'profesional') {
+    // solo su disciplina (simplificado: mostrar todo)
+  } else if(currentProfile === 'entrenador') {
+    filtered = TODAY_CITAS.filter(c => c.tec.toLowerCase().includes(currentUser.split(' ')[0].toLowerCase()));
+    if(!filtered.length) filtered = TODAY_CITAS;
+  }
+  tbody.innerHTML = filtered.map(c => `<tr>
+    <td style="font-weight:700;color:${c.estado==='suspendida'?'var(--rojo)':'var(--azul)'};${c.estado==='suspendida'?'text-decoration:line-through;':''}">${c.hora}</td>
+    <td><b>${c.atleta.split(' ').slice(0,2).join(' ')}</b></td>
+    <td><span class="badge b-${c.prof}">${c.profNom}</span></td>
+    <td><span class="badge ${eb[c.estado]}">${el[c.estado]}</span></td>
+    <td>${(c.estado==='confirmada'||c.estado==='pendiente')&&currentProfile==='profesional'?`<button class="btn btn-warn btn-sm" onclick="openSusp('${c.atleta}','${c.hora}','${c.profNom}')">⏸</button>`:''}</td>
+  </tr>`).join('');
+}
+
+// ===== AGENDA =====
+function setupAgenda() {
+  document.getElementById('agenda-sub').textContent = currentProfile==='profesional' ? 'Tu agenda personal · ' + currentUser : 'Vista mensual · todos los profesionales';
+  const btn = document.getElementById('agenda-new-btn');
+  btn.style.display = '';
+  btn.textContent = currentProfile==='entrenador' ? '+ Solicitar Hora' : '+ Agendar Cita';
+}
+
+let calMonth=5, calYear=2026;
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const CAL_EVENTS = [
+  {d:12,m:5,y:2026,hora:'09:00',atleta:'Lucas A.',prof:'kine',estado:'suspendida'},
+  {d:12,m:5,y:2026,hora:'10:30',atleta:'Amaya N.',prof:'nutri',estado:'confirmada'},
+  {d:12,m:5,y:2026,hora:'11:00',atleta:'Mateo A.',prof:'profis',estado:'confirmada'},
+  {d:12,m:5,y:2026,hora:'14:00',atleta:'Eydan S.',prof:'psico',estado:'pendiente'},
+  {d:12,m:5,y:2026,hora:'15:30',atleta:'Martin A.',prof:'medico',estado:'confirmada'},
+  {d:15,m:5,y:2026,hora:'09:00',atleta:'Nicolas C.',prof:'kine',estado:'confirmada'},
+  {d:15,m:5,y:2026,hora:'11:00',atleta:'Paloma P.',prof:'nutri',estado:'confirmada'},
+  {d:18,m:5,y:2026,hora:'10:00',atleta:'Amaya N.',prof:'profis',estado:'confirmada'},
+  {d:19,m:5,y:2026,hora:'09:30',atleta:'Abigail C.',prof:'psico',estado:'confirmada'},
+  {d:20,m:5,y:2026,hora:'14:30',atleta:'Diego R.',prof:'medico',estado:'confirmada'},
+];
+function renderCalendar() {
+  document.getElementById('cal-month-lbl').textContent = MESES[calMonth]+' '+calYear;
+  const grid = document.getElementById('cal-grid'); grid.innerHTML='';
+  const firstDay = new Date(calYear,calMonth,1).getDay();
+  const dim = new Date(calYear,calMonth+1,0).getDate();
+  const off = firstDay===0?6:firstDay-1;
+  const today = new Date();
+  const filt = document.getElementById('cal-filter')?.value||'';
+  const evMap={};
+  CAL_EVENTS.forEach(e=>{
+    if(filt && e.prof!==filt) return;
+    if(e.m===calMonth && e.y===calYear){if(!evMap[e.d])evMap[e.d]=[];evMap[e.d].push(e);}
+  });
+  const dPrev=new Date(calYear,calMonth,0).getDate();
+  for(let i=off-1;i>=0;i--){const c=document.createElement('div');c.className='cal-cell other';c.innerHTML=`<div class="cal-date">${dPrev-i}</div>`;grid.appendChild(c);}
+  const cols={kine:'#7C3AED',psico:'#0891B2',nutri:'#16A34A',medico:'#C8102E',profis:'#D97706'};
+  for(let d=1;d<=dim;d++){
+    const c=document.createElement('div');
+    const isT=d===today.getDate()&&calMonth===today.getMonth()&&calYear===today.getFullYear();
+    c.className='cal-cell'+(isT?' today':'');
+    let h=`<div class="cal-date">${d}</div>`;
+    if(evMap[d]){evMap[d].slice(0,3).forEach(e=>{const col=cols[e.prof];const susp=e.estado==='suspendida';h+=`<span class="calevent${susp?' susp':''}" style="background:${col}22;color:${col};">${e.hora} ${e.atleta}</span>`;});if(evMap[d].length>3)h+=`<span style="font-size:9px;color:var(--gt);">+${evMap[d].length-3}</span>`;}
+    c.innerHTML=h;
+    const ds=calYear+'-'+(calMonth<9?'0':'')+(calMonth+1)+'-'+(d<10?'0':'')+d;
+    c.onclick=()=>openModalWithDate(ds);
+    grid.appendChild(c);
+  }
+  const tot=off+dim; const rem=tot%7===0?0:7-tot%7;
+  for(let i=1;i<=rem;i++){const c=document.createElement('div');c.className='cal-cell other';c.innerHTML=`<div class="cal-date">${i}</div>`;grid.appendChild(c);}
+}
+function changeMonth(d){calMonth+=d;if(calMonth<0){calMonth=11;calYear--;}if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
+function goToday(){calMonth=5;calYear=2026;renderCalendar();}
+
+// ===== CITAS =====
+function setupCitas() {
+  const btn = document.getElementById('citas-new-btn');
+  btn.style.display = '';
+  btn.textContent = currentProfile==='entrenador' ? '+ Solicitar Hora' : '+ Agendar Cita';
+}
+const CITAS_DATA = [
+  {fecha:'12/06/2026 09:00',atleta:'Lucas Agustin Zuñiga Levin',polo:'🏀 Basketball',tec:'Cesar Barria Vargas',prof:'kine',profNom:'🦴 Kine',motivo:'Control rodilla',estado:'suspendida'},
+  {fecha:'12/06/2026 10:30',atleta:'Amaya Nazal Rodriguez',polo:'🚣 Remo',tec:'Miguel Cerda',prof:'nutri',profNom:'🥗 Nutri',motivo:'Plan nutricional',estado:'confirmada'},
+  {fecha:'12/06/2026 11:00',atleta:'Mateo Aguilera Cardoch',polo:'🚣 Remo',tec:'Miguel Cerda',prof:'profis',profNom:'💪 Prep.F',motivo:'Evaluación fuerza',estado:'confirmada'},
+  {fecha:'12/06/2026 14:00',atleta:'Eydan Felipe Segovia Sepúlveda',polo:'🥋 Judo',tec:'Hernán Chavarría',prof:'psico',profNom:'🧠 Psico',motivo:'Estrés competitivo',estado:'pendiente'},
+  {fecha:'12/06/2026 15:30',atleta:'Martin Alonso Alvayay Gonzalez',polo:'🏃 Atletismo',tec:'Israel Saez',prof:'medico',profNom:'🩺 Médico',motivo:'Control médico',estado:'confirmada'},
+  {fecha:'10/06/2026 09:00',atleta:'Nicolas Cid Martinez',polo:'🚣 Remo',tec:'Miguel Cerda',prof:'kine',profNom:'🦴 Kine',motivo:'Lesión hombro',estado:'completada'},
+  {fecha:'08/06/2026 11:00',atleta:'Paloma Pulgar Rivera',polo:'🚣 Remo',tec:'Miguel Cerda',prof:'nutri',profNom:'🥗 Nutri',motivo:'Seguimiento plan',estado:'completada'},
+];
+function renderCitas() {
+  const body=document.getElementById('citas-body'); body.innerHTML='';
+  const eb={confirmada:'b-conf',pendiente:'b-pend',suspendida:'b-susp',completada:'b-comp'};
+  const el={confirmada:'Confirmada',pendiente:'Pendiente',suspendida:'⏸ Suspendida',completada:'Completada'};
+  let citas = CITAS_DATA;
+  if(currentProfile==='entrenador') citas=citas.filter(c=>c.tec.toLowerCase().includes(currentUser.split(' ')[0].toLowerCase()));
+  if(currentProfile==='profesional') citas=citas.filter(c=>true); // podría filtrar por su disciplina
+  citas.forEach(c=>{
+    const canSusp=(c.estado==='confirmada'||c.estado==='pendiente')&&currentProfile==='profesional';
+    const canReag=(c.estado==='suspendida')&&currentProfile==='admin';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td style="font-weight:700;color:${c.estado==='suspendida'?'var(--rojo)':'var(--azul)'};${c.estado==='suspendida'?'text-decoration:line-through;':''}">${c.fecha}</td>
+      <td><b>${c.atleta}</b></td>
+      <td style="font-size:11px;">${c.polo}</td>
+      <td style="font-size:11px;color:var(--gt);">${c.tec}</td>
+      <td><span class="badge b-${c.prof}">${c.profNom}</span></td>
+      <td style="font-size:11px;color:var(--gt);max-width:120px;">${c.motivo}</td>
+      <td><span class="badge ${eb[c.estado]}">${el[c.estado]}</span></td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm">Ver</button>
+        ${canSusp?`<button class="btn btn-warn btn-sm" onclick="openSusp('${c.atleta}','${c.fecha.split(' ')[1]}','${c.profNom}')">⏸ Suspender</button>`:''}
+        ${canReag?`<button class="btn btn-verde btn-sm" onclick="openReagendar('${c.atleta}','${c.profNom}')">📅 Reagendar</button>`:''}
+      </td>`;
+    body.appendChild(tr);
+  });
+}
+
+// ===== ATLETAS =====
+function renderAtletas() {
+  const poloF=document.getElementById('at-polo-f')?.value||'';
+  const entF=document.getElementById('at-ent-f')?.value||'';
+  const genF=document.getElementById('at-gen-f')?.value||'';
+  const buscar=(document.getElementById('at-buscar')?.value||'').toLowerCase();
+  const body=document.getElementById('atletas-body'); if(!body) return;
+  body.innerHTML='';
+  let count=0,total=0;
+  const poloIcons={Remo:'🚣',Basketball:'🏀',Judo:'🥋',Natación:'🏊',Atletismo:'🏃','Gimnasia Rítmica':'🎀',Vela:'⛵'};
+  Object.entries(POLOS_DATA).forEach(([polo,data])=>{
+    if(poloF && polo!==poloF) return;
+    data.atletas.forEach(a=>{
+      total++;
+      if(entF && a.entrenador!==entF) return;
+      if(genF && a.genero!==genF) return;
+      if(buscar && !a.nombre.toLowerCase().includes(buscar) && !a.entrenador.toLowerCase().includes(buscar)) return;
+      count++;
+      const tr=document.createElement('tr');
+      const gTag=a.genero==='Masculino'?`<span class="atleta-tag tag-m">♂ Masc.</span>`:`<span class="atleta-tag tag-f">♀ Fem.</span>`;
+      tr.innerHTML=`
+        <td style="color:var(--gt);font-size:11px;">${count}</td>
+        <td><b>${a.nombre}</b></td>
+        <td><span class="badge" style="background:#E0F2FE;color:#0369A1;">${poloIcons[polo]||'🏅'} ${polo}</span></td>
+        <td style="font-size:11px;color:var(--gt);">${a.etapa}</td>
+        <td>${gTag}</td>
+        <td style="font-size:11px;color:var(--gt);">${a.entrenador}</td>
+        <td>${currentProfile==='admin'?`<button class="btn btn-ghost btn-sm">✏️ Editar</button>`:'<span style="font-size:11px;color:var(--gt);">Solo lectura</span>'}</td>`;
+      body.appendChild(tr);
+    });
+  });
+  const countEl=document.getElementById('atletas-count');
+  if(countEl) countEl.textContent=`Mostrando ${count} de ${total} atletas vigentes`;
+}
+
+// ===== MÉTRICAS =====
+const MET_DATA={6:{kine:8,psico:5,nutri:11,medico:3,profis:14,remo:18,basket:8,judo:10,natacion:5,atletismo:0,total:41,susp:2},5:{kine:5,psico:5,nutri:6,medico:4,profis:8,remo:12,basket:5,judo:5,natacion:4,atletismo:2,total:28,susp:1},4:{kine:7,psico:3,nutri:9,medico:2,profis:11,remo:15,basket:6,judo:8,natacion:2,atletismo:1,total:32,susp:3},3:{kine:4,psico:4,nutri:7,medico:3,profis:9,remo:11,basket:5,judo:5,natacion:3,atletismo:3,total:27,susp:1}};
+function renderMetricas(){
+  const mes=parseInt(document.getElementById('m-mes').value);
+  const d=MET_DATA[mes];
+  const profs=[{k:'kine',l:'Kinesiología',i:'🦴'},{k:'psico',l:'Psicología',i:'🧠'},{k:'nutri',l:'Nutrición',i:'🥗'},{k:'medico',l:'Médico',i:'🩺'},{k:'profis',l:'Prep. Física',i:'💪'}];
+  document.getElementById('met-stats').innerHTML=profs.map(p=>`<div class="stat-card"><div class="stat-icon" style="background:var(--${p.k}-bg)">${p.i}</div><div class="stat-num" style="color:var(--${p.k})">${d[p.k]}</div><div class="stat-lbl">${p.l}</div></div>`).join('');
+  const mx=Math.max(...profs.map(p=>d[p.k]));
+  document.getElementById('met-disc').innerHTML=profs.map(p=>`<div class="mbar-wrap"><div class="mbar-lbl"><span style="color:var(--${p.k})">${p.i} ${p.l}</span><span>${d[p.k]}</span></div><div class="mbar-track"><div class="mbar-fill" style="width:${Math.round(d[p.k]/mx*100)}%;background:var(--${p.k})"></div></div></div>`).join('');
+  const polos=[{k:'remo',l:'🚣 Remo',c:'#3B82F6'},{k:'basket',l:'🏀 Basketball',c:'#F59E0B'},{k:'judo',l:'🥋 Judo',c:'#8B5CF6'},{k:'natacion',l:'🏊 Natación',c:'#06B6D4'},{k:'atletismo',l:'🏃 Atletismo',c:'#EC4899'}];
+  const mp=Math.max(...polos.map(p=>d[p.k]));
+  document.getElementById('met-polo').innerHTML=polos.map(p=>`<div class="mbar-wrap"><div class="mbar-lbl"><span style="color:${p.c}">${p.l}</span><span>${d[p.k]}</span></div><div class="mbar-track"><div class="mbar-fill" style="width:${mp?Math.round(d[p.k]/mp*100):0}%;background:${p.c}"></div></div></div>`).join('');
+  const ms=['Mar','Abr','May','Jun'];const vs=[27,32,28,41];const maxV=Math.max(...vs);
+  document.getElementById('met-evo').innerHTML=ms.map((m,i)=>`<div class="cbar-item"><div class="cbar-val">${vs[i]}</div><div class="cbar-col" style="background:var(--azul);height:${Math.round(vs[i]/maxV*100)}%;"></div><div class="cbar-lbl">${m}</div></div>`).join('');
+  const pd=[{n:'Dr. Juan Manuel Guzmán',d:'🦴 Kine',t:d.kine,r:Math.round(d.kine*.85),s:Math.round(d.kine*.1)},{n:'Ps. Mario Pidal',d:'🧠 Psico',t:d.psico,r:Math.round(d.psico*.9),s:0},{n:'Nut. Josefina Henríquez',d:'🥗 Nutri',t:d.nutri,r:Math.round(d.nutri*.82),s:Math.round(d.nutri*.08)},{n:'Dr. Juan Manuel Guzmán',d:'🩺 Médico',t:d.medico,r:d.medico,s:0},{n:'Prof. Matías Péndola',d:'💪 Prep.F',t:d.profis,r:Math.round(d.profis*.93),s:Math.round(d.profis*.05)}];
+  document.getElementById('met-tabla').innerHTML=pd.map(p=>{const pct=Math.round(p.r/p.t*100);return`<tr><td><b>${p.n}</b></td><td>${p.d}</td><td style="font-weight:700;">${p.t}</td><td style="color:var(--verde);font-weight:600;">${p.r}</td><td style="color:var(--rojo);font-weight:600;">${p.s}</td><td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:5px;background:var(--borde);border-radius:99px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${pct>=80?'var(--verde)':'var(--amarillo)'};border-radius:99px;"></div></div><span style="font-size:11px;font-weight:700;color:${pct>=80?'var(--verde)':'var(--amarillo)'};">${pct}%</span></div></td></tr>`;}).join('');
+}
+
+// ===== MODAL AGENDAR =====
+let cStep=1, selProf_=null, selHora=null;
+const NSTEPS=4;
+function openModal(){document.getElementById('modal-ov').classList.add('open');resetModal();goStep(1);}
+function openModalWithDate(date){openModal();setTimeout(()=>{document.getElementById('f-fecha').value=date;updateHorarios();},100);}
+function closeModal(){document.getElementById('modal-ov').classList.remove('open');}
+function resetModal(){cStep=1;selProf_=null;selHora=null;document.querySelectorAll('.ppill').forEach(p=>p.classList.remove('sel'));document.getElementById('prof-sel-info').style.display='none';}
+function goStep(n){
+  cStep=n;
+  for(let i=1;i<=NSTEPS;i++){
+    document.getElementById('wp'+i).classList.toggle('active',i===n);
+    const ws=document.getElementById('ws'+i),wn=document.getElementById('wn'+i);
+    ws.classList.remove('active','done');
+    if(i===n){ws.classList.add('active');wn.textContent=i;}else if(i<n){ws.classList.add('done');wn.textContent='✓';}else wn.textContent=i;
+  }
+  document.getElementById('btn-prev').style.display=n>1?'':'none';
+  document.getElementById('btn-next').textContent=n===NSTEPS?'✅ Confirmar':'Siguiente →';
+  if(n===NSTEPS) fillSummary();
+}
+function nextStep(){
+  if(cStep===1&&!selProf_){showToast('Selecciona un profesional','err');return;}
+  if(cStep===3&&!selHora){showToast('Selecciona un horario disponible','err');return;}
+  if(cStep===NSTEPS){confirmCita();return;}
+  goStep(cStep+1);
+}
+function prevStep(){if(cStep>1)goStep(cStep-1);}
+function selProf(key,label,nombre,el){
+  selProf_={key,label,nombre};
+  document.querySelectorAll('.ppill').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('prof-sel-info').style.display='block';
+  document.getElementById('prof-sel-txt').textContent=nombre+' — '+label;
+  setTimeout(()=>goStep(2),350);
+}
+function onPoloChange(){
+  const polo=document.getElementById('f-polo-m').value;
+  const sel=document.getElementById('f-atleta');
+  sel.innerHTML='<option value="">Seleccionar atleta...</option>';
+  if(polo&&POLOS_DATA[polo]){
+    POLOS_DATA[polo].atletas.forEach(a=>{const o=document.createElement('option');o.value=a.nombre;o.textContent=a.nombre+' ('+a.genero.slice(0,1)+' · '+a.etapa+')';sel.appendChild(o);});
+  }
+  // fill tecnicos para este polo
+  const tecSel=document.getElementById('f-tecnico');
+  const firstOpt=tecSel.options[0];
+  tecSel.innerHTML='';tecSel.appendChild(firstOpt);
+  if(polo&&POLOS_DATA[polo]){
+    POLOS_DATA[polo].entrenadores.forEach(e=>{const o=document.createElement('option');o.value=e;o.textContent=e;tecSel.appendChild(o);});
+  }
+}
+function onAtletaChange(){
+  // podría auto-rellenar apoderado si tuviéramos ese dato
+}
+function autoFillTecEmail(){
+  const emails={'Cesar Barria Vargas':'c.barria@promesaschile.cl','Miguel Cerda':'m.cerda@promesaschile.cl','Angela Parra':'a.parra@promesaschile.cl'};
+  const v=document.getElementById('f-tecnico').value;
+  document.getElementById('f-tecnico-email').value=emails[v]||'';
+}
+const FRANJA=[];for(let h=8;h<=17;h++){FRANJA.push(`${String(h).padStart(2,'0')}:00`);if(h<17)FRANJA.push(`${String(h).padStart(2,'0')}:30`);}
+const OCUP_BASE=['09:00','10:30','14:00','15:30'];
+function getOcup(base){const s=new Set();base.forEach(h=>{s.add(h);const[hh,mm]=h.split(':').map(Number);const mm2=mm+30;const hh2=mm2>=60?hh+1:hh;const mm2r=mm2>=60?mm2-60:mm2;s.add(`${String(hh2).padStart(2,'0')}:${String(mm2r).padStart(2,'0')}`);});return s;}
+function addMin(t,m){const[h,mn]=t.split(':').map(Number);const tot=h*60+mn+m;return`${String(Math.floor(tot/60)).padStart(2,'0')}:${String(tot%60).padStart(2,'0')}`;}
+function updateHorarios(){
+  const fecha=document.getElementById('f-fecha').value;
+  const grid=document.getElementById('hgrid');grid.innerHTML='';selHora=null;
+  if(!fecha)return;
+  const ocup=getOcup(OCUP_BASE);
+  FRANJA.forEach(h=>{
+    const btn=document.createElement('div');
+    const o=ocup.has(h);
+    btn.className='hbtn'+(o?' ocup':'');
+    const principal=OCUP_BASE.includes(h);
+    btn.innerHTML=`${h}<span class="hlbl">${o?(principal?'ocupado':'bloqueado'):'hasta '+addMin(h,60)}</span>`;
+    if(!o)btn.onclick=()=>{document.querySelectorAll('.hbtn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');selHora=h;};
+    grid.appendChild(btn);
+  });
+}
+function fillSummary(){
+  const pN=selProf_?selProf_.nombre:'—';
+  const pL=selProf_?selProf_.label:'—';
+  const atleta=document.getElementById('f-atleta').value||'—';
+  const poloSel=document.getElementById('f-polo-m');
+  const polo=poloSel.options[poloSel.selectedIndex]?.text||'—';
+  const tecSel=document.getElementById('f-tecnico');
+  const tec=tecSel.options[tecSel.selectedIndex]?.text||'—';
+  const apod=document.getElementById('f-apoderado').value||'—';
+  const emailApod=document.getElementById('f-email-apod').value||'—';
+  const emailTec=document.getElementById('f-tecnico-email').value||'—';
+  const fecha=document.getElementById('f-fecha').value||'—';
+  const motivo=document.getElementById('f-motivo').value||'Sin especificar';
+  const horaFin=selHora?addMin(selHora,60):'-';
+  document.getElementById('c-prof').textContent=pL;
+  document.getElementById('c-atleta').textContent=atleta;
+  document.getElementById('c-polo').textContent=polo;
+  document.getElementById('c-tec').textContent=tec;
+  document.getElementById('c-apod').textContent=apod;
+  document.getElementById('c-fecha').textContent=`${fecha}${selHora?' de '+selHora+' a '+horaFin:''}`;
+  document.getElementById('c-motivo').textContent=motivo;
+  document.getElementById('prev-gcal-prof').textContent=pN;
+  document.getElementById('prev-email-tec').textContent=emailTec;
+  document.getElementById('prev-body-tec').innerHTML=`<p>Estimado/a <b>${tec}</b>,</p><p style="margin-top:8px;">Se ha registrado exitosamente la solicitud de hora para <b>${atleta}</b>.</p><p style="margin-top:8px;margin-left:10px;">• Profesional: ${pL}<br>• Fecha: ${fecha} a las ${selHora||'—'}<br>• Motivo: ${motivo}</p><p style="margin-top:8px;color:var(--gt);font-size:11px;">La confirmación de asistencia será enviada al apoderado. Te notificaremos ante cualquier cambio.</p><p style="margin-top:10px;">Saludos,<br><b>Promesas Chile · IND Los Ríos</b></p>`;
+  document.getElementById('prev-email-apod').textContent=emailApod;
+  document.getElementById('prev-body-apod').innerHTML=`<p>Estimado/a <b>${apod}</b>,</p><p style="margin-top:8px;">Confirmamos la siguiente cita para <b>${atleta}</b>:</p><div style="background:var(--gris);border-radius:8px;padding:10px;margin:10px 0;border-left:4px solid var(--azul);"><p><b>📅 Fecha:</b> ${fecha}</p><p><b>🕐 Hora:</b> ${selHora||'—'} a ${horaFin}</p><p><b>👨‍⚕️ Profesional:</b> ${pN} — ${pL}</p><p><b>📋 Motivo:</b> ${motivo}</p></div><p>Por favor confirme asistencia respondiendo este correo. Avise con 24 hrs si no puede asistir.</p><p style="margin-top:10px;">Saludos cordiales,<br><b>Promesas Chile · IND Región de Los Ríos</b></p>`;
+}
+function switchTab(id,btn){document.querySelectorAll('.tpanel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');btn.classList.add('active');}
+function confirmCita(){closeModal();showToast('✅ Cita agendada · Email al técnico (aviso) y apoderado (confirmación) · Google Calendar bloqueado');}
+
+// ===== SUSPENDER =====
+let suspData={};
+function openSusp(atleta,hora,disc){
+  suspData={atleta,hora,disc};
+  document.getElementById('s-atleta').textContent=atleta;
+  document.getElementById('s-hora').textContent=hora;
+  document.getElementById('s-disc').textContent=disc;
+  document.getElementById('s-motivo').value='';
+  document.getElementById('s-detalle').value='';
+  document.getElementById('susp-ov').classList.add('open');
+}
+function closeSusp(){document.getElementById('susp-ov').classList.remove('open');}
+function confirmSusp(){
+  if(!document.getElementById('s-motivo').value){showToast('Selecciona un motivo','err');return;}
+  closeSusp();
+  showToast(`⏸ Cita suspendida · Técnico y apoderado notificados · Horario liberado en Google Calendar`);
+}
+
+// ===== REAGENDAR (solo admin) =====
+let reagData={};
+let reagHora=null;
+function openReagendar(atleta,disc){
+  reagData={atleta,disc};reagHora=null;
+  document.getElementById('r-atleta').textContent=atleta;
+  document.getElementById('r-disc').textContent=disc;
+  document.getElementById('r-fecha').value='';
+  document.getElementById('r-hgrid').innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--gt);padding:14px;font-size:13px;">Selecciona una fecha primero</div>';
+  document.getElementById('reagendar-ov').classList.add('open');
+}
+function closeReagendar(){document.getElementById('reagendar-ov').classList.remove('open');}
+function updateReagendarHorarios(){
+  const fecha=document.getElementById('r-fecha').value;
+  const grid=document.getElementById('r-hgrid');grid.innerHTML='';reagHora=null;
+  if(!fecha)return;
+  const ocup=getOcup(['10:00','13:30']);
+  FRANJA.forEach(h=>{
+    const btn=document.createElement('div');
+    const o=ocup.has(h);
+    btn.className='hbtn'+(o?' ocup':'');
+    btn.innerHTML=`${h}<span class="hlbl">${o?(OCUP_BASE.includes(h)?'ocupado':'bloqueado'):'hasta '+addMin(h,60)}</span>`;
+    if(!o)btn.onclick=()=>{document.querySelectorAll('#r-hgrid .hbtn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');reagHora=h;};
+    grid.appendChild(btn);
+  });
+}
+function confirmReagendar(){
+  if(!document.getElementById('r-fecha').value||!reagHora){showToast('Selecciona fecha y horario','err');return;}
+  closeReagendar();
+  showToast(`📅 Cita reagendada para ${document.getElementById('r-fecha').value} a las ${reagHora} · Técnico y apoderado notificados`);
+}
+
+// ===== TOAST =====
+function showToast(msg,type='ok'){
+  const t=document.getElementById('toast');
+  t.querySelector('#t-msg').textContent=msg;
+  t.style.background=type==='err'?'var(--rojo)':type==='warn'?'var(--amarillo)':'var(--verde)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),5000);
+}
+
+// ===== INTEGRACIÓN GAS =====
+let gasUrl = localStorage.getItem('gasUrl') || '';
+
+function guardarGasUrl() {
+  const url = document.getElementById('gas-url-input').value.trim();
+  if(!url || !url.includes('script.google.com')) {
+    showToastError('URL inválida — debe ser de script.google.com');
+    return;
+  }
+  gasUrl = url;
+  localStorage.setItem('gasUrl', url);
+  updateGasStatus();
+  showToast('✅ URL guardada correctamente');
+}
+
+function updateGasStatus() {
+  const el = document.getElementById('gas-url-status');
+  const inp = document.getElementById('gas-url-input');
+  if(!el) return;
+  if(gasUrl) {
+    if(inp) inp.value = gasUrl;
+    el.innerHTML = '<div style="background:#DCFCE7;border:1px solid #BBF7D0;border-radius:8px;padding:8px 12px;font-size:12px;color:#15803D;">✅ URL configurada y guardada</div>';
+  } else {
+    el.innerHTML = '<div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:8px 12px;font-size:12px;color:#92400E;">⚠️ URL no configurada aún</div>';
+  }
+}
+
+async function testIntegracion() {
+  if(!gasUrl) {
+    showToastError('Primero guarda la URL de Apps Script');
+    return;
+  }
+  const res_el = document.getElementById('gas-test-result');
+  res_el.innerHTML = '<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:8px 12px;font-size:12px;color:#1E40AF;">⏳ Enviando cita de prueba a Google...</div>';
+  const payload = {
+    tipo: 'nueva_cita',
+    profesionalKey: 'kine',
+    profesionalLabel: '🦴 Kinesiología',
+    atletaNombre: 'ATLETA DE PRUEBA',
+    polo: 'Basketball',
+    tecnicoNombre: 'Cesar Barria Vargas',
+    tecnicoEmail: 'test@promesaschile.cl',
+    apoderadoNombre: 'Apoderado Prueba',
+    apoderadoEmail: 'apoderado.prueba@gmail.com',
+    motivo: 'Prueba de integración del sistema Promesas Chile',
+    fechaHoraInicio: new Date().toISOString().slice(0,16),
+    tipoBloque: 'libre',
+  };
+  try {
+    const response = await fetch(gasUrl, { method: 'POST', body: JSON.stringify(payload) });
+    const data = await response.json();
+    if(data.ok) {
+      res_el.innerHTML = '<div style="background:#DCFCE7;border:1px solid #BBF7D0;border-radius:8px;padding:10px 12px;font-size:12px;color:#15803D;">✅ <b>¡Integración funcionando!</b><br>Evento creado en Google Calendar · Emails enviados · Registrado en Sheets<br>ID del evento: ' + data.eventoId + '</div>';
+    } else {
+      res_el.innerHTML = '<div style="background:#FEE2E2;border:1px solid #FECACA;border-radius:8px;padding:10px 12px;font-size:12px;color:#B91C1C;">❌ Error del servidor: ' + data.error + '</div>';
+    }
+  } catch(e) {
+    res_el.innerHTML = '<div style="background:#FEE2E2;border:1px solid #FECACA;border-radius:8px;padding:10px 12px;font-size:12px;color:#B91C1C;">❌ No se pudo conectar: ' + e.message + '<br><br><b>Posibles causas:</b><br>· La URL no es correcta<br>· El script no fue desplegado como aplicación web<br>· Los permisos no fueron autorizados</div>';
+  }
+}
+
+</script>
+</body>
+</html>
