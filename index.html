@@ -18,7 +18,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Inter',sans-serif;background:var(--gris);color:var(--texto);min-height:100vh;}
-
+ 
 /* LOGIN */
 #login-screen{position:fixed;inset:0;background:linear-gradient(135deg,var(--azul) 0%,#001a55 100%);display:flex;align-items:center;justify-content:center;z-index:1000;}
 .login-box{background:white;border-radius:16px;padding:40px 36px;width:380px;box-shadow:0 24px 64px rgba(0,0,0,.3);}
@@ -33,7 +33,7 @@ body{font-family:'Inter',sans-serif;background:var(--gris);color:var(--texto);mi
 .profile-name{font-weight:700;font-size:13px;color:var(--texto);}
 .profile-desc{font-size:11px;color:var(--gt);margin-top:2px;}
 .login-note{font-size:11px;color:var(--gt);text-align:center;margin-top:12px;}
-
+ 
 /* TOPBAR */
 #app{display:none;}
 .topbar{background:var(--azul);color:white;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:58px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,48,135,.3);}
@@ -47,14 +47,14 @@ body{font-family:'Inter',sans-serif;background:var(--gris);color:var(--texto);mi
 .tuser{display:flex;align-items:center;gap:8px;}
 .avatar{width:30px;height:30px;border-radius:50%;background:var(--rojo);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;}
 .role-chip{font-size:10px;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:20px;font-weight:600;}
-
+ 
 /* LAYOUT */
 .main{max-width:1200px;margin:0 auto;padding:22px 20px;}
 .view{display:none;} .view.active{display:block;}
 .page-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;}
 .page-title{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--azul);letter-spacing:-.4px;}
 .page-sub{font-size:12px;color:var(--gt);margin-top:2px;}
-
+ 
 /* BUTTONS */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;text-decoration:none;}
 .btn-primary{background:var(--rojo);color:white;} .btn-primary:hover{background:var(--rojo-d);}
@@ -64,30 +64,30 @@ body{font-family:'Inter',sans-serif;background:var(--gris);color:var(--texto);mi
 .btn-danger{background:#FEE2E2;color:var(--rojo);border:1.5px solid #FECACA;}
 .btn-verde{background:var(--verde-bg);color:var(--verde);border:1.5px solid #BBF7D0;}
 .btn-sm{padding:5px 10px;font-size:11px;}
-
+ 
 /* CARDS */
 .card{background:white;border-radius:12px;border:1px solid var(--borde);box-shadow:0 1px 4px rgba(0,0,0,.05);}
 .card-hdr{padding:14px 18px 12px;border-bottom:1px solid var(--borde);display:flex;align-items:center;justify-content:space-between;}
 .card-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;}
 .card-body{padding:16px;}
-
+ 
 /* STATS */
 .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px;}
 .stat-card{background:white;border-radius:10px;border:1px solid var(--borde);padding:14px;display:flex;flex-direction:column;gap:5px;}
 .stat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;}
 .stat-num{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;letter-spacing:-1px;line-height:1;}
 .stat-lbl{font-size:11px;color:var(--gt);font-weight:500;}
-
+ 
 /* GRID */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
-
+ 
 /* TABLE */
 table{width:100%;border-collapse:collapse;}
 th{text-align:left;font-size:10px;font-weight:600;color:var(--gt);text-transform:uppercase;letter-spacing:.5px;padding:9px 12px;background:var(--gris);}
 td{padding:10px 12px;font-size:12px;border-bottom:1px solid var(--borde);}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:#FAFBFF;}
-
+ 
 /* BADGES */
 .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;}
 .b-kine{background:var(--kine-bg);color:var(--kine);}
@@ -102,7 +102,7 @@ tr:hover td{background:#FAFBFF;}
 .b-adm{background:#F3E8FF;color:#7C3AED;}
 .b-prof{background:#CFFAFE;color:#0E7490;}
 .b-ent{background:#FEF3C7;color:#92400E;}
-
+ 
 /* FORM */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .form-group{display:flex;flex-direction:column;gap:4px;}
@@ -112,7 +112,7 @@ tr:hover td{background:#FAFBFF;}
 .fc{padding:8px 10px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;color:var(--texto);background:white;transition:border .15s;-webkit-appearance:none;appearance:none;}
 .fc:focus{outline:none;border-color:var(--azul-c);box-shadow:0 0 0 3px rgba(26,79,170,.1);}
 textarea.fc{resize:vertical;min-height:68px;}
-
+ 
 /* MODAL */
 .modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
 .modal-ov.open{display:flex;}
@@ -123,7 +123,7 @@ textarea.fc{resize:vertical;min-height:68px;}
 .modal-body{padding:16px 20px;}
 .modal-ftr{padding:12px 20px 16px;display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--borde);}
 .close-btn{background:none;border:none;color:var(--gt);cursor:pointer;font-size:20px;line-height:1;}
-
+ 
 /* WIZARD */
 .wizard{display:flex;margin-bottom:18px;border-radius:10px;overflow:hidden;border:1px solid var(--borde);}
 .wstep{flex:1;padding:9px 10px;display:flex;align-items:center;gap:7px;background:white;font-size:10px;font-weight:600;color:var(--gt);border-right:1px solid var(--borde);transition:all .2s;}
@@ -134,7 +134,7 @@ textarea.fc{resize:vertical;min-height:68px;}
 .wstep.active .wnum{background:rgba(255,255,255,.25);color:white;}
 .wstep.done .wnum{background:var(--verde);color:white;}
 .wpanel{display:none;} .wpanel.active{display:block;}
-
+ 
 /* PROF PILLS */
 .prof-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:14px;}
 .ppill{padding:10px 5px;border-radius:8px;border:2px solid var(--borde);text-align:center;cursor:pointer;transition:all .15s;background:white;}
@@ -146,7 +146,7 @@ textarea.fc{resize:vertical;min-height:68px;}
 .ppill.nutri:hover,.ppill.nutri.sel{background:var(--nutri-bg);border-color:var(--nutri);color:var(--nutri);}
 .ppill.medico:hover,.ppill.medico.sel{background:var(--medico-bg);border-color:var(--medico);color:var(--medico);}
 .ppill.profis:hover,.ppill.profis.sel{background:var(--profis-bg);border-color:var(--profis);color:var(--profis);}
-
+ 
 /* HORARIOS */
 .hgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;}
 .hbtn{padding:8px 5px;border:1.5px solid var(--borde);border-radius:7px;background:white;font-size:11px;font-weight:600;color:var(--gt);cursor:pointer;text-align:center;transition:all .15s;}
@@ -154,53 +154,53 @@ textarea.fc{resize:vertical;min-height:68px;}
 .hbtn.sel{border-color:var(--azul);background:var(--azul);color:white;}
 .hbtn.ocup{background:var(--gris);color:#CBD5E1;cursor:not-allowed;text-decoration:line-through;}
 .hbtn .hlbl{display:block;font-size:8px;opacity:.7;margin-top:1px;}
-
+ 
 /* CONFIRM */
 .cbox{background:var(--gris);border-radius:9px;padding:13px;margin-bottom:12px;border:1px solid var(--borde);}
 .crow{display:flex;justify-content:space-between;align-items:flex-start;padding:4px 0;font-size:12px;}
 .crow .ck{color:var(--gt);font-weight:500;}
 .crow .cv{font-weight:600;text-align:right;max-width:60%;}
 .cdiv{height:1px;background:var(--borde);margin:5px 0;}
-
+ 
 /* NOTIF BOXES */
 .nbox{border-radius:9px;padding:11px 13px;font-size:12px;border:1px solid;margin-top:10px;}
 .nbox.blue{background:#EFF6FF;border-color:#BFDBFE;color:#1E40AF;}
 .nbox.orange{background:#FFF7ED;border-color:#FED7AA;color:#9A3412;}
 .nbox.red{background:#FEF2F2;border-color:#FECACA;color:#991B1B;}
 .nbox.green{background:#F0FDF4;border-color:#BBF7D0;color:#166534;}
-
+ 
 /* EMAIL PREVIEW */
 .email-prev{border:1px solid var(--borde);border-radius:8px;overflow:hidden;margin-top:8px;}
 .email-hdr{background:var(--gris);padding:7px 11px;font-size:10px;color:var(--gt);border-bottom:1px solid var(--borde);}
 .email-bdy{padding:12px;font-size:12px;line-height:1.6;}
-
+ 
 /* TABS */
 .tabs{display:flex;gap:2px;border-bottom:2px solid var(--borde);margin-bottom:14px;}
 .tbtn{padding:7px 14px;font-size:12px;font-weight:600;color:var(--gt);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:'Inter',sans-serif;}
 .tbtn.active{color:var(--azul);border-bottom-color:var(--azul);}
 .tpanel{display:none;} .tpanel.active{display:block;}
-
+ 
 /* FILTERS */
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
 .fsel{padding:6px 26px 6px 9px;border:1.5px solid var(--borde);border-radius:7px;font-size:12px;font-family:'Inter',sans-serif;color:var(--texto);background:white;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;cursor:pointer;}
 .fsel:focus{outline:none;border-color:var(--azul);}
-
+ 
 /* METRIC BARS */
 .mbar-wrap{margin-bottom:10px;}
 .mbar-lbl{display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin-bottom:3px;}
 .mbar-track{height:6px;background:var(--borde);border-radius:99px;overflow:hidden;}
 .mbar-fill{height:100%;border-radius:99px;}
-
+ 
 /* CHART */
 .chart-bars{display:flex;align-items:flex-end;gap:7px;height:110px;margin-top:8px;}
 .cbar-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end;}
 .cbar-col{width:100%;border-radius:4px 4px 0 0;min-height:4px;}
 .cbar-lbl{font-size:9px;color:var(--gt);font-weight:500;}
 .cbar-val{font-size:10px;font-weight:700;}
-
+ 
 /* SECTION LABEL */
 .slbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gt);margin-bottom:7px;}
-
+ 
 /* CALENDARIO */
 .cal-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--borde);}
 .cal-month{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:var(--azul);}
@@ -218,7 +218,7 @@ textarea.fc{resize:vertical;min-height:68px;}
 .cal-date{width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;margin-bottom:3px;}
 .calevent{display:block;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:600;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .calevent.susp{text-decoration:line-through;opacity:.55;}
-
+ 
 /* ALERTA */
 .alert{border-radius:9px;padding:11px 13px;display:flex;align-items:flex-start;gap:9px;margin-bottom:16px;border:1.5px solid;}
 .alert.warn{background:#FFF7ED;border-color:#FED7AA;}
@@ -226,20 +226,20 @@ textarea.fc{resize:vertical;min-height:68px;}
 .alert-icon{font-size:16px;flex-shrink:0;}
 .alert-body{font-size:12px;}
 .alert-body b{display:block;font-size:13px;margin-bottom:2px;}
-
+ 
 /* SUSPENSION CARD */
 .susp-card{border:2px solid #FECACA;background:#FEF2F2;border-radius:9px;padding:13px;margin-bottom:12px;}
 .susp-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:var(--rojo);margin-bottom:7px;}
-
+ 
 /* TOAST */
 .toast{position:fixed;bottom:20px;right:20px;color:white;padding:11px 16px;border-radius:9px;font-size:12px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;display:flex;align-items:center;gap:8px;max-width:360px;}
 .toast.show{transform:translateY(0);opacity:1;}
-
+ 
 /* ATLETAS TABLE */
 .atleta-tag{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:600;}
 .tag-m{background:#DBEAFE;color:#1D4ED8;}
 .tag-f{background:#FCE7F3;color:#9D174D;}
-
+ 
 /* PANEL PERMISSION */
 .no-access{text-align:center;padding:60px 24px;color:var(--gt);}
 .no-access-icon{font-size:48px;margin-bottom:14px;}
@@ -247,7 +247,7 @@ textarea.fc{resize:vertical;min-height:68px;}
 </style>
 </head>
 <body>
-
+ 
 <!-- ==================== LOGIN ==================== -->
 <div id="login-screen">
   <div class="login-box">
@@ -276,7 +276,7 @@ textarea.fc{resize:vertical;min-height:68px;}
     <div class="login-note">Prototipo visual · sin autenticación real</div>
   </div>
 </div>
-
+ 
 <!-- ==================== APP ==================== -->
 <div id="app">
   <!-- TOPBAR -->
@@ -295,9 +295,9 @@ textarea.fc{resize:vertical;min-height:68px;}
       <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:white;border:none;" onclick="doLogout()">Salir</button>
     </div>
   </div>
-
+ 
   <div class="main">
-
+ 
     <!-- ===== DASHBOARD ===== -->
     <div id="view-dashboard" class="view">
       <div class="page-hdr">
@@ -337,7 +337,7 @@ textarea.fc{resize:vertical;min-height:68px;}
         </div>
       </div>
     </div>
-
+ 
     <!-- ===== AGENDA ===== -->
     <div id="view-agenda" class="view">
       <div class="page-hdr">
@@ -363,7 +363,7 @@ textarea.fc{resize:vertical;min-height:68px;}
         <span class="badge b-profis">💪 Prep.Física</span><span class="badge b-susp">⏸ Suspendida</span>
       </div></div>
     </div>
-
+ 
     <!-- ===== GESTIÓN CITAS ===== -->
     <div id="view-citas" class="view">
       <div class="page-hdr">
@@ -381,7 +381,7 @@ textarea.fc{resize:vertical;min-height:68px;}
         <tbody id="citas-body"></tbody></table>
       </div></div>
     </div>
-
+ 
     <!-- ===== ATLETAS ===== -->
     <div id="view-atletas" class="view">
       <div class="page-hdr">
@@ -399,7 +399,7 @@ textarea.fc{resize:vertical;min-height:68px;}
       </div></div>
       <div style="margin-top:10px;font-size:11px;color:var(--gt);text-align:right;" id="atletas-count"></div>
     </div>
-
+ 
     <!-- ===== MÉTRICAS ===== -->
     <div id="view-metricas" class="view">
       <div class="page-hdr">
@@ -426,7 +426,7 @@ textarea.fc{resize:vertical;min-height:68px;}
         </div>
       </div>
     </div>
-
+ 
   
     <!-- ===== INTEGRACIÓN ===== -->
     <div id="view-integracion" class="view">
@@ -437,15 +437,15 @@ textarea.fc{resize:vertical;min-height:68px;}
         </div>
         <span class="badge badge-confirmada" style="font-size:12px;padding:6px 14px;">✅ Gratis con cuenta Google</span>
       </div>
-
+ 
       <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:14px 16px;font-size:13px;color:#1E40AF;margin-bottom:20px;">
         <b>¿Cómo funciona?</b> Google Apps Script es un backend gratuito alojado en tu cuenta Google. Recibe los datos del formulario y: (1) crea el evento en Google Calendar del profesional, (2) envía emails al técnico y apoderado, (3) registra la cita en Google Sheets.
       </div>
-
+ 
       <div class="card" style="margin-bottom:18px;">
         <div class="card-header"><div class="card-title">Pasos para activar la integración</div></div>
         <div class="card-body" style="display:flex;flex-direction:column;gap:18px;">
-
+ 
           <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--gris-borde);">
             <div style="width:32px;height:32px;border-radius:50%;background:#DBEAFE;color:#1D4ED8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">1</div>
             <div>
@@ -453,7 +453,7 @@ textarea.fc{resize:vertical;min-height:68px;}
               <div style="font-size:12px;color:var(--gris-texto);">Ve a <a href="https://script.google.com" target="_blank" style="color:#1D4ED8;"><b>script.google.com</b></a> con la cuenta Google del administrador. Haz clic en <b>Nuevo proyecto</b> y nómbralo <b>Agenda Promesas Chile</b>.</div>
             </div>
           </div>
-
+ 
           <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--gris-borde);">
             <div style="width:32px;height:32px;border-radius:50%;background:#DCFCE7;color:#15803D;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">2</div>
             <div>
@@ -461,7 +461,7 @@ textarea.fc{resize:vertical;min-height:68px;}
               <div style="font-size:12px;color:var(--gris-texto);">Descarga el archivo <b>AgendaPromemasChile_GAS.js</b> que generamos. Borra el contenido del editor en script.google.com y pega todo el código. Guarda con Ctrl+S.</div>
             </div>
           </div>
-
+ 
           <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--gris-borde);">
             <div style="width:32px;height:32px;border-radius:50%;background:#FEF3C7;color:#92400E;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">3</div>
             <div>
@@ -469,7 +469,7 @@ textarea.fc{resize:vertical;min-height:68px;}
               <div style="font-size:12px;color:var(--gris-texto);">Ve a <a href="https://sheets.google.com" target="_blank" style="color:#1D4ED8;"><b>sheets.google.com</b></a> y crea una hoja llamada <b>Agenda Promesas Chile</b>. Copia el ID de la URL (la parte larga entre /d/ y /edit) y reemplaza el valor de <code>sheetId</code> en el código.</div>
             </div>
           </div>
-
+ 
           <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--gris-borde);">
             <div style="width:32px;height:32px;border-radius:50%;background:#FEE2E2;color:#B91C1C;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">4</div>
             <div>
@@ -484,7 +484,7 @@ textarea.fc{resize:vertical;min-height:68px;}
               </div>
             </div>
           </div>
-
+ 
           <div style="display:flex;gap:14px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid var(--gris-borde);">
             <div style="width:32px;height:32px;border-radius:50%;background:#EDE9FE;color:#7C3AED;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">5</div>
             <div>
@@ -495,7 +495,7 @@ textarea.fc{resize:vertical;min-height:68px;}
               Haz clic en <b>Implementar</b>, autoriza los permisos y copia la URL generada.</div>
             </div>
           </div>
-
+ 
           <div style="display:flex;gap:14px;align-items:flex-start;">
             <div style="width:32px;height:32px;border-radius:50%;background:#DCFCE7;color:#15803D;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;">6</div>
             <div style="flex:1;">
@@ -510,14 +510,14 @@ textarea.fc{resize:vertical;min-height:68px;}
               <div id="gas-test-result" style="margin-top:10px;"></div>
             </div>
           </div>
-
+ 
         </div>
       </div>
     </div>
-
+ 
 </div><!-- /main -->
 </div><!-- /app -->
-
+ 
 <!-- ==================== MODAL AGENDAR ==================== -->
 <div class="modal-ov" id="modal-ov" onclick="if(event.target===this)closeModal()">
 <div class="modal">
@@ -623,7 +623,7 @@ textarea.fc{resize:vertical;min-height:68px;}
     <button class="btn btn-primary" id="btn-next" onclick="nextStep()">Siguiente →</button>
   </div>
 </div></div>
-
+ 
 <!-- ==================== MODAL SUSPENDER ==================== -->
 <div class="modal-ov" id="susp-ov" onclick="if(event.target===this)closeSusp()">
 <div class="modal" style="max-width:460px;">
@@ -647,7 +647,7 @@ textarea.fc{resize:vertical;min-height:68px;}
   </div>
   <div class="modal-ftr"><button class="btn btn-secondary" onclick="closeSusp()">Cancelar</button><button class="btn btn-danger" onclick="confirmSusp()">⏸ Confirmar Suspensión</button></div>
 </div></div>
-
+ 
 <!-- ==================== MODAL REAGENDAR (solo admin) ==================== -->
 <div class="modal-ov" id="reagendar-ov" onclick="if(event.target===this)closeReagendar()">
 <div class="modal" style="max-width:440px;">
@@ -665,25 +665,25 @@ textarea.fc{resize:vertical;min-height:68px;}
   </div>
   <div class="modal-ftr"><button class="btn btn-secondary" onclick="closeReagendar()">Cancelar</button><button class="btn btn-verde" onclick="confirmReagendar()">✅ Confirmar Reagendamiento</button></div>
 </div></div>
-
+ 
 <div class="toast" id="toast"><span id="t-icon">✅</span><span id="t-msg">OK</span></div>
-
+ 
 <script>
 // ==================== DATOS REALES ====================
 const POLOS_DATA = {"Remo":{"atletas":[{"nombre":"Alex Watt Martinez","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Alonso Gutierrez Gomez","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Alonso Matias Sanchez Erices","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Alonso Nail Carvajal","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Alvaro Corales Loyola","genero":"Masculino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Amaya Nazal Rodriguez","genero":"Femenino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Anastazia Nazal Rodriguez","genero":"Femenino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Angela Navarrete Pineda","genero":"Femenino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Antonella Noches Carter","genero":"Femenino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Antonia Nicolle Pinchulaf Galeano","genero":"Femenino","etapa":"Infantil","entrenador":"Ignacio Andrés Silva Becerra"},{"nombre":"Augusto Maximilian Fuentes Morales","genero":"Masculino","etapa":"Infantil","entrenador":"Ignacio Andrés Silva Becerra"},{"nombre":"Benjamin Salas Jerez","genero":"Masculino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Camila Contreras Fuentes","genero":"Femenino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Camila Fernanadez Antri","genero":"Femenino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Camilo Soto Pozas","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Clemente Alvarez Gonzalez","genero":"Masculino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Colomba Wilson Gonzalez","genero":"Femenino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Cristobal Cartagena Aravena","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Cristobal Nuñez Muñoz","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Daniel Rocha Twele","genero":"Masculino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Domingo Sepulveda Horn","genero":"Masculino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Fernanda Peñailillo Aravena","genero":"Femenino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Francisco Celedon Ascencio","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Franco Criado Cuevas","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Franco Guarda Quezada","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Gwenaelle Serandour Evans","genero":"Femenino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Ivanna Maldonado Rojas","genero":"Femenino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Javiera Valenzuela Meza","genero":"Femenino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Juan Jose Labatut Rademacher","genero":"Masculino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Lucas Jimenez Tapia","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Lucas Sacnhez Cid","genero":"Masculino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Luciano Azurmendi Oyarzun","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Manuel Antonio Silva Faure","genero":"Masculino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Martin Lopez Cartagena","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Martina Estrella Olivares Delgado","genero":"Femenino","etapa":"Infantil","entrenador":"Ignacio Andrés Silva Becerra"},{"nombre":"Mateo Aguilera Cardoch","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Mateo Bustos Hewstone","genero":"Masculino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Matias Arteaga Calfueque","genero":"Masculino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Matias Lican Sepulveda Caniulaf","genero":"Masculino","etapa":"Infantil","entrenador":"Patricio Barrera Alarcon"},{"nombre":"Matilda Mendez Zuñiga","genero":"Femenino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Micaela Hoffmann Ocaranza","genero":"Femenino","etapa":"Infantil","entrenador":"Cristian Marcelo Astete Miranda"},{"nombre":"Nicolas Cid Martinez","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Oliver Guillermo Contreras Fuentes","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Paloma Pulgar Rivera","genero":"Femenino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Rafael Aravena Vergara","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Samuel Ruiz Cortez","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Sofia Flandez Quiroz","genero":"Femenino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Vaneza Garrido Medina","genero":"Femenino","etapa":"Juvenil","entrenador":"Miguel Cerda"},{"nombre":"Vicente Quezada Fernandez","genero":"Masculino","etapa":"Infantil","entrenador":"Nelson Morales Poblete"},{"nombre":"Yenzo San Feliu Vargas","genero":"Masculino","etapa":"Juvenil","entrenador":"Miguel Cerda"}],"entrenadores":["Cristian Marcelo Astete Miranda","Ignacio Andrés Silva Becerra","Miguel Cerda","Nelson Morales Poblete","Patricio Barrera Alarcon"]},"Basketball":{"atletas":[{"nombre":"Cameron Martin Bichop Torres","genero":"Masculino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Clemente Agustin Rosas Rios","genero":"Masculino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Emilio Alberto Valenzuela Vega","genero":"Masculino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Jeremy Yeraldo Alvarez Gaete","genero":"Masculino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Leon Franco Sanchez Rivera","genero":"Masculino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Liliana Grace Staley Navarro","genero":"Femenino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Lucas Agustin Zuñiga Levin","genero":"Masculino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Maite Lourdes Mera Pulquillanca","genero":"Femenino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Martina Soledad Catricheo Suarez","genero":"Femenino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Moira Belen Castro Flores","genero":"Femenino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Nataly Fabiana Carrera Hidalgo","genero":"Femenino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"},{"nombre":"Olivia Paz Prutzmann Oyarzo","genero":"Femenino","etapa":"Infantil","entrenador":"Cesar Barria Vargas"}],"entrenadores":["Cesar Barria Vargas"]},"Judo":{"atletas":[{"nombre":"Abigail Sofía Cifuentes Bustos","genero":"Femenino","etapa":"Infantil","entrenador":"Hernán Alejandro Chavarría Cuevas"},{"nombre":"Alex Daniel Moraga Belmar","genero":"Masculino","etapa":"Infantil","entrenador":"Hernán Alejandro Chavarría Cuevas"},{"nombre":"Anaís Sofia Vargas Zuñiga","genero":"Femenino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Cristobal Nahuel Galvez Perez","genero":"Masculino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Eydan Felipe Segovia Sepúlveda","genero":"Masculino","etapa":"Infantil","entrenador":"Hernán Alejandro Chavarría Cuevas"},{"nombre":"Fernanda Sayen Villablanca Troncoso","genero":"Femenino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Gaspar Vasquez Gonzales","genero":"Masculino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Ignacia Sánchez Baeza","genero":"Femenino","etapa":"Infantil","entrenador":"Hernán Alejandro Chavarría Cuevas"},{"nombre":"Ignacio Abraham Torres Runil","genero":"Masculino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Josefa Emilia Torres Martinez","genero":"Femenino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Leonor Irene Salvatierra Gutierrez","genero":"Femenino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Martin Alexander Muñoz Bustamante","genero":"Masculino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Monserrat Ignacia Marcos Delgado","genero":"Femenino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Priscilla Garrido Ovalle","genero":"Femenino","etapa":"Infantil","entrenador":"Hernán Alejandro Chavarría Cuevas"},{"nombre":"Rayen Sayra Castro Caman","genero":"Femenino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Sait Jeremias Baez Chavez","genero":"Masculino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"},{"nombre":"Victor Andres Martinez Martinez","genero":"Masculino","etapa":"Infantil","entrenador":"Gustavo Miranda Rivera"}],"entrenadores":["Gustavo Miranda Rivera","Hernán Alejandro Chavarría Cuevas"]},"Natación":{"atletas":[{"nombre":"Agustin Chacano Obando","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Agustina Robles Valenzuela","genero":"Femenino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Alonso Tomas Angulo Rojas","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Diego Rodriguez Navarro","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Eloisa Francisca Godoy Vargas","genero":"Femenino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Gaspar Efrain Silva Diaz","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Isabella Leonor Peña Balboa","genero":"Femenino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Isidora Anais Toledo Soto","genero":"Femenino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Jean Marco Cedeño Gallardo","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Juan Jose Concha Rivera","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Pascal Alonso Godoy Vargas","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"},{"nombre":"Vicente Alejandro Silva Silva","genero":"Masculino","etapa":"Infantil","entrenador":"Angela Parra"}],"entrenadores":["Angela Parra"]},"Atletismo":{"atletas":[{"nombre":"Catalina Alejandra Heilenkotter Carrasco","genero":"Femenino","etapa":"U23 Adulto","entrenador":"Eduardo Antonio Mera Messi"},{"nombre":"Isidora Betzabe Dias Gonzalez","genero":"Femenino","etapa":"Juvenil","entrenador":"Israel Eliseo Saez Molina"},{"nombre":"Joaquin Ignacio Prosser Tejeda","genero":"Masculino","etapa":"Juvenil","entrenador":"Israel Eliseo Saez Molina"},{"nombre":"Martin Alonso Alvayay Gonzalez","genero":"Masculino","etapa":"Juvenil","entrenador":"Israel Eliseo Saez Molina"},{"nombre":"Pilar Andrea Ardiles Reyes","genero":"Femenino","etapa":"Juvenil","entrenador":"Israel Eliseo Saez Molina"},{"nombre":"Sofia Andrea Fierro Donoso","genero":"Femenino","etapa":"Juvenil","entrenador":"Israel Eliseo Saez Molina"},{"nombre":"Sofía Magdalena Araya Villanueva","genero":"Femenino","etapa":"Junior","entrenador":"Juan Luis Gajardo"},{"nombre":"Valentina Antonella Cancino Troncoso","genero":"Femenino","etapa":"Juvenil","entrenador":"Israel Eliseo Saez Molina"}],"entrenadores":["Eduardo Antonio Mera Messi","Israel Eliseo Saez Molina","Juan Luis Gajardo"]},"Gimnasia Rítmica":{"atletas":[{"nombre":"Paula Antonia Hernández González","genero":"Femenino","etapa":"Junior","entrenador":"Gustavo Cárcamo"},{"nombre":"Trinidad Almendra Urrutia Andía","genero":"Femenino","etapa":"Senior","entrenador":"Gustavo Cárcamo Cárcamo"}],"entrenadores":["Gustavo Cárcamo","Gustavo Cárcamo Cárcamo"]},"Vela":{"atletas":[{"nombre":"Agustina Jordan Jordan Von Appen","genero":"Femenino","etapa":"Adulto","entrenador":"Agustin Bellocchio"}],"entrenadores":["Agustin Bellocchio"]}};
-
+ 
 const PERFILES = {
   admin: {label:'Administrador', icon:'🛡️', badge:'b-adm', views:['dashboard','agenda','citas','atletas','metricas','integracion'], initials:'AD'},
   profesional: {label:'Profesional / EID', icon:'🩺', badge:'b-prof', views:['dashboard','disponibilidad','agenda','citas'], initials:'EID'},
   entrenador: {label:'Técnico / Entrenador', icon:'🏋️', badge:'b-ent', views:['dashboard','agenda','citas'], initials:'TC'},
 };
-
+ 
 const NAV_LABELS = {dashboard:'Dashboard', disponibilidad:'Mi Disponibilidad', agenda:'Agenda', citas:'Gestión de Citas', atletas:'Atletas', metricas:'Métricas', integracion:'🔌 Integración'};
-
+ 
 const PROFESIONALES_EID = ['Kin. Catalina Camino','Ps. Mario Pidal (Psicología)','Nut. Josefina Henríquez (Nutrición)','Dr. Juan Manuel Guzmán (Médico)','Prof. Matías Péndola (Prep. Física)'];
-
+ 
 let currentProfile = null, currentUser = null;
-
+ 
 // ===== LOGIN =====
 let selectedLoginProfile = null;
 function selectProfile(p) {
@@ -705,7 +705,7 @@ function selectProfile(p) {
     usel.style.display = 'none';
   }
 }
-
+ 
 function doLogin() {
   if(!selectedLoginProfile) { alert('Selecciona un perfil'); return; }
   currentProfile = selectedLoginProfile;
@@ -714,7 +714,7 @@ function doLogin() {
   document.getElementById('app').style.display = 'block';
   setupApp();
 }
-
+ 
 function doLogout() {
   currentProfile = null; currentUser = null; selectedLoginProfile = null;
   document.getElementById('login-screen').style.display = 'flex';
@@ -722,7 +722,7 @@ function doLogout() {
   document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('selected'));
   document.getElementById('login-user-select').style.display = 'none';
 }
-
+ 
 function setupApp() {
   const p = PERFILES[currentProfile];
   document.getElementById('top-username').textContent = currentUser;
@@ -745,7 +745,7 @@ function setupApp() {
   populateTecnicoDropdown();
   showView('dashboard');
 }
-
+ 
 function populatePoloDropdowns() {
   ['f-polo-m','at-polo-f'].forEach(id => {
     const el = document.getElementById(id);
@@ -768,7 +768,7 @@ function populatePoloDropdowns() {
     [...ents].sort().forEach(e => { const o=document.createElement('option');o.value=e;o.textContent=e;entF.appendChild(o); });
   }
 }
-
+ 
 function populateTecnicoDropdown() {
   const sel = document.getElementById('f-tecnico');
   sel.innerHTML = '<option value="">Seleccionar...</option>';
@@ -776,7 +776,7 @@ function populateTecnicoDropdown() {
   Object.values(POLOS_DATA).forEach(p => p.entrenadores.forEach(e => ents.add(e)));
   [...ents].sort().forEach(e => { const o=document.createElement('option');o.value=e;o.textContent=e;sel.appendChild(o); });
 }
-
+ 
 // ===== VIEWS =====
 const allViews = ['dashboard','agenda','citas','atletas','metricas'];
 function showView(v) {
@@ -791,7 +791,7 @@ function showView(v) {
   if(v==='metricas') renderMetricas();
   if(v==='integracion') updateGasStatus();
 }
-
+ 
 // ===== DASHBOARD =====
 const TODAY_CITAS = [
   {hora:'09:00',atleta:'Lucas Agustin Zuñiga Levin',polo:'Basketball',tec:'Cesar Barria Vargas',prof:'kine',profNom:'🦴 Kine',estado:'suspendida'},
@@ -831,7 +831,7 @@ function setupDashboard() {
     <td>${(c.estado==='confirmada'||c.estado==='pendiente')&&currentProfile==='profesional'?`<button class="btn btn-warn btn-sm" onclick="openSusp('${c.atleta}','${c.hora}','${c.profNom}')">⏸</button>`:''}</td>
   </tr>`).join('');
 }
-
+ 
 // ===== AGENDA =====
 function setupAgenda() {
   document.getElementById('agenda-sub').textContent = currentProfile==='profesional' ? 'Tu agenda personal · ' + currentUser : 'Vista mensual · todos los profesionales';
@@ -839,7 +839,7 @@ function setupAgenda() {
   btn.style.display = '';
   btn.textContent = currentProfile==='entrenador' ? '+ Solicitar Hora' : '+ Agendar Cita';
 }
-
+ 
 let calMonth=5, calYear=2026;
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const CAL_EVENTS = [
@@ -886,7 +886,7 @@ function renderCalendar() {
 }
 function changeMonth(d){calMonth+=d;if(calMonth<0){calMonth=11;calYear--;}if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
 function goToday(){calMonth=5;calYear=2026;renderCalendar();}
-
+ 
 // ===== CITAS =====
 function setupCitas() {
   const btn = document.getElementById('citas-new-btn');
@@ -929,7 +929,7 @@ function renderCitas() {
     body.appendChild(tr);
   });
 }
-
+ 
 // ===== ATLETAS =====
 function renderAtletas() {
   const poloF=document.getElementById('at-polo-f')?.value||'';
@@ -964,7 +964,7 @@ function renderAtletas() {
   const countEl=document.getElementById('atletas-count');
   if(countEl) countEl.textContent=`Mostrando ${count} de ${total} atletas vigentes`;
 }
-
+ 
 // ===== MÉTRICAS =====
 const MET_DATA={6:{kine:8,psico:5,nutri:11,medico:3,profis:14,remo:18,basket:8,judo:10,natacion:5,atletismo:0,total:41,susp:2},5:{kine:5,psico:5,nutri:6,medico:4,profis:8,remo:12,basket:5,judo:5,natacion:4,atletismo:2,total:28,susp:1},4:{kine:7,psico:3,nutri:9,medico:2,profis:11,remo:15,basket:6,judo:8,natacion:2,atletismo:1,total:32,susp:3},3:{kine:4,psico:4,nutri:7,medico:3,profis:9,remo:11,basket:5,judo:5,natacion:3,atletismo:3,total:27,susp:1}};
 function renderMetricas(){
@@ -982,7 +982,7 @@ function renderMetricas(){
   const pd=[{n:'Dr. Juan Manuel Guzmán',d:'🦴 Kine',t:d.kine,r:Math.round(d.kine*.85),s:Math.round(d.kine*.1)},{n:'Ps. Mario Pidal',d:'🧠 Psico',t:d.psico,r:Math.round(d.psico*.9),s:0},{n:'Nut. Josefina Henríquez',d:'🥗 Nutri',t:d.nutri,r:Math.round(d.nutri*.82),s:Math.round(d.nutri*.08)},{n:'Dr. Juan Manuel Guzmán',d:'🩺 Médico',t:d.medico,r:d.medico,s:0},{n:'Prof. Matías Péndola',d:'💪 Prep.F',t:d.profis,r:Math.round(d.profis*.93),s:Math.round(d.profis*.05)}];
   document.getElementById('met-tabla').innerHTML=pd.map(p=>{const pct=Math.round(p.r/p.t*100);return`<tr><td><b>${p.n}</b></td><td>${p.d}</td><td style="font-weight:700;">${p.t}</td><td style="color:var(--verde);font-weight:600;">${p.r}</td><td style="color:var(--rojo);font-weight:600;">${p.s}</td><td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:5px;background:var(--borde);border-radius:99px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${pct>=80?'var(--verde)':'var(--amarillo)'};border-radius:99px;"></div></div><span style="font-size:11px;font-weight:700;color:${pct>=80?'var(--verde)':'var(--amarillo)'};">${pct}%</span></div></td></tr>`;}).join('');
 }
-
+ 
 // ===== MODAL AGENDAR =====
 let cStep=1, selProf_=null, selHora=null;
 const NSTEPS=4;
@@ -1088,7 +1088,7 @@ function fillSummary(){
 }
 function switchTab(id,btn){document.querySelectorAll('.tpanel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');btn.classList.add('active');}
 function confirmCita(){closeModal();showToast('✅ Cita agendada · Email al técnico (aviso) y apoderado (confirmación) · Google Calendar bloqueado');}
-
+ 
 // ===== SUSPENDER =====
 let suspData={};
 function openSusp(atleta,hora,disc){
@@ -1106,7 +1106,7 @@ function confirmSusp(){
   closeSusp();
   showToast(`⏸ Cita suspendida · Técnico y apoderado notificados · Horario liberado en Google Calendar`);
 }
-
+ 
 // ===== REAGENDAR (solo admin) =====
 let reagData={};
 let reagHora=null;
@@ -1138,7 +1138,7 @@ function confirmReagendar(){
   closeReagendar();
   showToast(`📅 Cita reagendada para ${document.getElementById('r-fecha').value} a las ${reagHora} · Técnico y apoderado notificados`);
 }
-
+ 
 // ===== TOAST =====
 function showToast(msg,type='ok'){
   const t=document.getElementById('toast');
@@ -1147,14 +1147,14 @@ function showToast(msg,type='ok'){
   t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),5000);
 }
-
+ 
 // ===== INTEGRACIÓN GAS =====
 let gasUrl = localStorage.getItem('gasUrl') || '';
-
+ 
 function guardarGasUrl() {
   const url = document.getElementById('gas-url-input').value.trim();
   if(!url || !url.includes('script.google.com')) {
-    showToastError('URL inválida — debe ser de script.google.com');
+    showToast('URL inválida — debe ser de script.google.com','err');
     return;
   }
   gasUrl = url;
@@ -1162,7 +1162,7 @@ function guardarGasUrl() {
   updateGasStatus();
   showToast('✅ URL guardada correctamente');
 }
-
+ 
 function updateGasStatus() {
   const el = document.getElementById('gas-url-status');
   const inp = document.getElementById('gas-url-input');
@@ -1174,10 +1174,10 @@ function updateGasStatus() {
     el.innerHTML = '<div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:8px 12px;font-size:12px;color:#92400E;">⚠️ URL no configurada aún</div>';
   }
 }
-
+ 
 async function testIntegracion() {
   if(!gasUrl) {
-    showToastError('Primero guarda la URL de Apps Script');
+    showToast('Primero guarda la URL de Apps Script','err');
     return;
   }
   const res_el = document.getElementById('gas-test-result');
@@ -1208,7 +1208,7 @@ async function testIntegracion() {
     res_el.innerHTML = '<div style="background:#FEE2E2;border:1px solid #FECACA;border-radius:8px;padding:10px 12px;font-size:12px;color:#B91C1C;">❌ No se pudo conectar: ' + e.message + '<br><br><b>Posibles causas:</b><br>· La URL no es correcta<br>· El script no fue desplegado como aplicación web<br>· Los permisos no fueron autorizados</div>';
   }
 }
-
+ 
 </script>
 </body>
 </html>
