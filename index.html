@@ -318,21 +318,8 @@ textarea.fc{resize:vertical;min-height:68px;}
           </table></div>
         </div>
         <div class="card">
-          <div class="card-hdr"><div class="card-title">Atenciones junio — por disciplina</div></div>
-          <div class="card-body">
-            <div class="chart-bars">
-              <div class="cbar-item"><div class="cbar-val">8</div><div class="cbar-col" style="background:var(--kine);height:55%;"></div><div class="cbar-lbl">Kine</div></div>
-              <div class="cbar-item"><div class="cbar-val">5</div><div class="cbar-col" style="background:var(--psico);height:34%;"></div><div class="cbar-lbl">Psico</div></div>
-              <div class="cbar-item"><div class="cbar-val">11</div><div class="cbar-col" style="background:var(--nutri);height:76%;"></div><div class="cbar-lbl">Nutri</div></div>
-              <div class="cbar-item"><div class="cbar-val">3</div><div class="cbar-col" style="background:var(--medico);height:21%;"></div><div class="cbar-lbl">Médico</div></div>
-              <div class="cbar-item"><div class="cbar-val">14</div><div class="cbar-col" style="background:var(--profis);height:97%;"></div><div class="cbar-lbl">Prep.F</div></div>
-            </div>
-            <div style="margin-top:12px;">
-              <div class="mbar-wrap"><div class="mbar-lbl"><span style="color:var(--kine)">🦴 Kinesiología</span><span>8/20</span></div><div class="mbar-track"><div class="mbar-fill" style="width:40%;background:var(--kine)"></div></div></div>
-              <div class="mbar-wrap"><div class="mbar-lbl"><span style="color:var(--nutri)">🥗 Nutrición</span><span>11/20</span></div><div class="mbar-track"><div class="mbar-fill" style="width:55%;background:var(--nutri)"></div></div></div>
-              <div class="mbar-wrap"><div class="mbar-lbl"><span style="color:var(--profis)">💪 Prep. Física</span><span>14/20</span></div><div class="mbar-track"><div class="mbar-fill" style="width:70%;background:var(--profis)"></div></div></div>
-            </div>
-          </div>
+          <div class="card-hdr"><div class="card-title" id="dash-disc-title">Atenciones del mes — por disciplina</div></div>
+          <div class="card-body" id="dash-disc-body"></div>
         </div>
       </div>
     </div>
@@ -983,6 +970,7 @@ function setupDashboard() {
     const match = TODAY_CITAS.filter(c => c.tec.toLowerCase().includes(currentUser.split(' ')[0].toLowerCase()));
     if(match.length) filtered = match;
   }
+  renderDashDisc();
   if(!filtered.length){
     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--gt);">Sin citas para hoy</td></tr>`;
     return;
@@ -994,6 +982,20 @@ function setupDashboard() {
     <td><span class="badge ${eb[c.estado]}">${el[c.estado]}</span></td>
     <td>${(c.estado==='confirmada'||c.estado==='pendiente')&&(currentProfile==='profesional'||currentProfile==='admin_profesional'||currentProfile==='admin')?`<button class="btn btn-warn btn-sm" onclick="openSusp('${c.eventoId||''}')">⏸</button>`:''}</td>
   </tr>`).join('');
+}
+
+// Gráfico del dashboard: atenciones del mes actual por disciplina (datos reales)
+function renderDashDisc(){
+  const body=document.getElementById('dash-disc-body');if(!body)return;
+  const MESC=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const now=new Date();const mes=now.getMonth()+1;
+  document.getElementById('dash-disc-title').textContent='Atenciones '+MESC[mes-1]+' — por disciplina';
+  const citasMes=CITAS_DATA.filter(c=>parseInt((c.fecha||'').slice(5,7))===mes&&c.estado!=='suspendida');
+  const profs=[{k:'kine',l:'Kine',i:'🦴'},{k:'psico',l:'Psico',i:'🧠'},{k:'nutri',l:'Nutri',i:'🥗'},{k:'medico',l:'Médico',i:'🩺'},{k:'profis',l:'Prep.F',i:'💪'}];
+  const d={};profs.forEach(p=>d[p.k]=citasMes.filter(c=>c.prof===p.k).length);
+  if(!citasMes.length){body.innerHTML='<div style="text-align:center;color:var(--gt);padding:24px;font-size:13px;">Aún no hay atenciones registradas este mes</div>';return;}
+  const mx=Math.max(1,...profs.map(p=>d[p.k]));
+  body.innerHTML=`<div class="chart-bars">${profs.map(p=>`<div class="cbar-item"><div class="cbar-val">${d[p.k]}</div><div class="cbar-col" style="background:var(--${p.k});height:${Math.round(d[p.k]/mx*100)}%;"></div><div class="cbar-lbl">${p.l}</div></div>`).join('')}</div>`;
 }
 
 // ===== AGENDA =====
@@ -1114,21 +1116,36 @@ function renderAtletas() {
 }
 
 // ===== MÉTRICAS =====
-const MET_DATA={6:{kine:8,psico:5,nutri:11,medico:3,profis:14,remo:18,basket:8,judo:10,natacion:5,atletismo:0,total:41,susp:2},5:{kine:5,psico:5,nutri:6,medico:4,profis:8,remo:12,basket:5,judo:5,natacion:4,atletismo:2,total:28,susp:1},4:{kine:7,psico:3,nutri:9,medico:2,profis:11,remo:15,basket:6,judo:8,natacion:2,atletismo:1,total:32,susp:3},3:{kine:4,psico:4,nutri:7,medico:3,profis:9,remo:11,basket:5,judo:5,natacion:3,atletismo:3,total:27,susp:1}};
+// Métricas calculadas en vivo desde las citas reales (CITAS_DATA)
+const PROF_NOMBRES={kine:'Kin. Catalina Camino',psico:'Ps. Mario Pidal',nutri:'Nut. Josefina Henríquez',medico:'Dr. Juan Manuel Guzmán',profis:'Prof. Matías Péndola'};
+const POLO_KEY={'Remo':'remo','Basketball':'basket','Judo':'judo','Natación':'natacion','Atletismo':'atletismo'};
 function renderMetricas(){
-  const mes=parseInt(document.getElementById('m-mes').value);
-  const d=MET_DATA[mes];
+  const mes=parseInt(document.getElementById('m-mes').value); // 1-12
+  const citasMes=CITAS_DATA.filter(c=>parseInt((c.fecha||'').slice(5,7))===mes);
+  const cnt=(arr,pred)=>arr.filter(pred).length;
   const profs=[{k:'kine',l:'Kinesiología',i:'🦴'},{k:'psico',l:'Psicología',i:'🧠'},{k:'nutri',l:'Nutrición',i:'🥗'},{k:'medico',l:'Médico',i:'🩺'},{k:'profis',l:'Prep. Física',i:'💪'}];
+  const d={};profs.forEach(p=>d[p.k]=cnt(citasMes,c=>c.prof===p.k&&c.estado!=='suspendida'));
   document.getElementById('met-stats').innerHTML=profs.map(p=>`<div class="stat-card"><div class="stat-icon" style="background:var(--${p.k}-bg)">${p.i}</div><div class="stat-num" style="color:var(--${p.k})">${d[p.k]}</div><div class="stat-lbl">${p.l}</div></div>`).join('');
-  const mx=Math.max(...profs.map(p=>d[p.k]));
+  const mx=Math.max(1,...profs.map(p=>d[p.k]));
   document.getElementById('met-disc').innerHTML=profs.map(p=>`<div class="mbar-wrap"><div class="mbar-lbl"><span style="color:var(--${p.k})">${p.i} ${p.l}</span><span>${d[p.k]}</span></div><div class="mbar-track"><div class="mbar-fill" style="width:${Math.round(d[p.k]/mx*100)}%;background:var(--${p.k})"></div></div></div>`).join('');
   const polos=[{k:'remo',l:'🚣 Remo',c:'#3B82F6'},{k:'basket',l:'🏀 Basketball',c:'#F59E0B'},{k:'judo',l:'🥋 Judo',c:'#8B5CF6'},{k:'natacion',l:'🏊 Natación',c:'#06B6D4'},{k:'atletismo',l:'🏃 Atletismo',c:'#EC4899'}];
-  const mp=Math.max(...polos.map(p=>d[p.k]));
-  document.getElementById('met-polo').innerHTML=polos.map(p=>`<div class="mbar-wrap"><div class="mbar-lbl"><span style="color:${p.c}">${p.l}</span><span>${d[p.k]}</span></div><div class="mbar-track"><div class="mbar-fill" style="width:${mp?Math.round(d[p.k]/mp*100):0}%;background:${p.c}"></div></div></div>`).join('');
-  const ms=['Mar','Abr','May','Jun'];const vs=[27,32,28,41];const maxV=Math.max(...vs);
+  const dp={};polos.forEach(p=>dp[p.k]=cnt(citasMes,c=>POLO_KEY[c.polo]===p.k&&c.estado!=='suspendida'));
+  const mp=Math.max(1,...polos.map(p=>dp[p.k]));
+  document.getElementById('met-polo').innerHTML=polos.map(p=>`<div class="mbar-wrap"><div class="mbar-lbl"><span style="color:${p.c}">${p.l}</span><span>${dp[p.k]}</span></div><div class="mbar-track"><div class="mbar-fill" style="width:${Math.round(dp[p.k]/mp*100)}%;background:${p.c}"></div></div></div>`).join('');
+  // Evolución: últimos 4 meses hasta el seleccionado
+  const MESC=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const ms=[],vs=[];
+  for(let k=3;k>=0;k--){const m=mes-k;if(m<1)continue;ms.push(MESC[m-1]);vs.push(cnt(CITAS_DATA,c=>parseInt((c.fecha||'').slice(5,7))===m&&c.estado!=='suspendida'));}
+  const maxV=Math.max(1,...vs);
   document.getElementById('met-evo').innerHTML=ms.map((m,i)=>`<div class="cbar-item"><div class="cbar-val">${vs[i]}</div><div class="cbar-col" style="background:var(--azul);height:${Math.round(vs[i]/maxV*100)}%;"></div><div class="cbar-lbl">${m}</div></div>`).join('');
-  const pd=[{n:'Dr. Juan Manuel Guzmán',d:'🦴 Kine',t:d.kine,r:Math.round(d.kine*.85),s:Math.round(d.kine*.1)},{n:'Ps. Mario Pidal',d:'🧠 Psico',t:d.psico,r:Math.round(d.psico*.9),s:0},{n:'Nut. Josefina Henríquez',d:'🥗 Nutri',t:d.nutri,r:Math.round(d.nutri*.82),s:Math.round(d.nutri*.08)},{n:'Dr. Juan Manuel Guzmán',d:'🩺 Médico',t:d.medico,r:d.medico,s:0},{n:'Prof. Matías Péndola',d:'💪 Prep.F',t:d.profis,r:Math.round(d.profis*.93),s:Math.round(d.profis*.05)}];
-  document.getElementById('met-tabla').innerHTML=pd.map(p=>{const pct=Math.round(p.r/p.t*100);return`<tr><td><b>${p.n}</b></td><td>${p.d}</td><td style="font-weight:700;">${p.t}</td><td style="color:var(--verde);font-weight:600;">${p.r}</td><td style="color:var(--rojo);font-weight:600;">${p.s}</td><td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:5px;background:var(--borde);border-radius:99px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${pct>=80?'var(--verde)':'var(--amarillo)'};border-radius:99px;"></div></div><span style="font-size:11px;font-weight:700;color:${pct>=80?'var(--verde)':'var(--amarillo)'};">${pct}%</span></div></td></tr>`;}).join('');
+  // Tabla detalle por profesional
+  const pd=profs.map(p=>{
+    const total=cnt(citasMes,c=>c.prof===p.k);
+    const real=cnt(citasMes,c=>c.prof===p.k&&c.estado==='completada');
+    const susp=cnt(citasMes,c=>c.prof===p.k&&c.estado==='suspendida');
+    return {n:PROF_NOMBRES[p.k],d:p.i+' '+p.l,t:total,r:real,s:susp};
+  });
+  document.getElementById('met-tabla').innerHTML=pd.map(p=>{const pct=p.t?Math.round(p.r/p.t*100):0;return`<tr><td><b>${p.n}</b></td><td>${p.d}</td><td style="font-weight:700;">${p.t}</td><td style="color:var(--verde);font-weight:600;">${p.r}</td><td style="color:var(--rojo);font-weight:600;">${p.s}</td><td><div style="display:flex;align-items:center;gap:6px;"><div style="flex:1;height:5px;background:var(--borde);border-radius:99px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${pct>=80?'var(--verde)':'var(--amarillo)'};border-radius:99px;"></div></div><span style="font-size:11px;font-weight:700;color:${pct>=80?'var(--verde)':'var(--amarillo)'};">${pct}%</span></div></td></tr>`;}).join('');
 }
 
 // ===== MODAL AGENDAR =====
@@ -1148,6 +1165,11 @@ function goStep(n){
   }
   document.getElementById('btn-prev').style.display=n>1?'':'none';
   document.getElementById('btn-next').textContent=n===NSTEPS?'✅ Confirmar':'Siguiente →';
+  // Al entrar al paso fecha/hora, refrescar la grilla de horarios según el profesional ya elegido
+  if(n===3){
+    const f=document.getElementById('f-fecha');
+    if(f.value) updateHorarios(); else document.getElementById('hgrid').innerHTML=hmsg('Selecciona una fecha primero');
+  }
   if(n===NSTEPS) fillSummary();
 }
 function nextStep(){
