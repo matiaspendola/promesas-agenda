@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -245,6 +245,7 @@ textarea.fc{resize:vertical;min-height:68px;}
 .no-access-icon{font-size:48px;margin-bottom:14px;}
 .no-access-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--texto);margin-bottom:6px;}
 </style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -254,26 +255,24 @@ textarea.fc{resize:vertical;min-height:68px;}
     <div class="login-logo">PC</div>
     <div class="login-title">Promesas Chile</div>
     <div class="login-sub">IND Región de Los Ríos · Sistema de Agendamiento</div>
-    <div class="profile-list" id="profile-list">
-      <div class="profile-btn" id="pb-admin" onclick="selectProfile('admin')">
-        <div class="profile-icon" style="background:#F3E8FF;">🛡️</div>
-        <div><div class="profile-name">Administrador</div><div class="profile-desc">Acceso total · agendamiento · reagendamiento · atletas · métricas</div></div>
+    <div id="login-gsi" style="display:flex;justify-content:center;margin:24px 0 8px;">
+      <div id="g_id_onload"
+        data-client_id="1011451823200-sntlql8cvr0l1i2fs5h15b3e5sndjp3i.apps.googleusercontent.com"
+        data-callback="handleGoogleCredential"
+        data-auto_prompt="false">
       </div>
-      <div class="profile-btn" id="pb-prof" onclick="selectProfile('profesional')">
-        <div class="profile-icon" style="background:#CFFAFE;">🩺</div>
-        <div><div class="profile-name">Profesional / EID</div><div class="profile-desc">Mi agenda · agendar y suspender mis propias citas</div></div>
-      </div>
-      <div class="profile-btn" id="pb-ent" onclick="selectProfile('entrenador')">
-        <div class="profile-icon" style="background:#FEF3C7;">🏋️</div>
-        <div><div class="profile-name">Técnico / Entrenador</div><div class="profile-desc">Solicitar horas para mis atletas · ver estado</div></div>
+      <div class="g_id_signin"
+        data-type="standard"
+        data-size="large"
+        data-theme="outline"
+        data-text="sign_in_with"
+        data-shape="rectangular"
+        data-logo_alignment="left">
       </div>
     </div>
-    <div id="login-user-select" style="display:none;margin-bottom:16px;">
-      <div class="label" style="margin-bottom:6px;">Selecciona tu nombre</div>
-      <select class="fc" id="login-user-name" style="width:100%;"></select>
-    </div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="doLogin()">Ingresar al sistema →</button>
-    <div class="login-note">Prototipo visual · sin autenticación real</div>
+    <div id="login-error" style="display:none;background:#FEE2E2;color:#991B1B;border-radius:8px;padding:10px 14px;font-size:13px;margin-top:12px;text-align:center;"></div>
+    <div id="login-loading" style="display:none;text-align:center;color:#6B7280;font-size:13px;margin-top:16px;">Verificando acceso…</div>
+    <div class="login-note" style="margin-top:20px;">Acceso restringido · solo usuarios autorizados</div>
   </div>
 </div>
 
@@ -682,45 +681,54 @@ const NAV_LABELS = {dashboard:'Dashboard', disponibilidad:'Mi Disponibilidad', a
 
 const PROFESIONALES_EID = ['Kin. Catalina Camino','Ps. Mario Pidal (Psicología)','Nut. Josefina Henríquez (Nutrición)','Dr. Juan Manuel Guzmán (Médico)','Prof. Matías Péndola (Prep. Física)'];
 
-let currentProfile = null, currentUser = null;
+let currentProfile = null, currentUser = null, currentEmail = null;
 
 // ===== LOGIN =====
-let selectedLoginProfile = null;
-function selectProfile(p) {
-  selectedLoginProfile = p;
-  document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('selected'));
-  document.getElementById('pb-'+p).classList.add('selected');
-  const sel = document.getElementById('login-user-name');
-  sel.innerHTML = '';
-  const usel = document.getElementById('login-user-select');
-  if(p === 'profesional') {
-    usel.style.display = '';
-    PROFESIONALES_EID.forEach(n => sel.innerHTML += `<option>${n}</option>`);
-  } else if(p === 'entrenador') {
-    usel.style.display = '';
-    const ents = new Set();
-    Object.values(POLOS_DATA).forEach(polo => polo.entrenadores.forEach(e => ents.add(e)));
-    [...ents].sort().forEach(n => sel.innerHTML += `<option>${n}</option>`);
-  } else {
-    usel.style.display = 'none';
+function jwtDecode(token) {
+  try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); } catch(e) { return null; }
+}
+
+async function handleGoogleCredential(response) {
+  const payload = jwtDecode(response.credential);
+  if (!payload || !payload.email) { showLoginError('No se pudo leer el token de Google.'); return; }
+  const email = payload.email;
+  document.getElementById('login-loading').style.display = 'block';
+  document.getElementById('login-error').style.display = 'none';
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ tipo: 'validar_usuario', email })
+    });
+    const data = await res.json();
+    if (!data.autorizado) { showLoginError('Tu cuenta (' + email + ') no está autorizada en este sistema.'); return; }
+    // Mapear rol del sheet al perfil del sistema
+    const rolMap = { admin: 'admin', profesional: 'profesional', tecnico: 'entrenador' };
+    currentProfile = rolMap[data.rol] || data.rol;
+    currentUser = data.nombre;
+    currentEmail = email;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    setupApp();
+  } catch(e) {
+    showLoginError('Error conectando con el servidor. Intenta de nuevo.');
+  } finally {
+    document.getElementById('login-loading').style.display = 'none';
   }
 }
 
-function doLogin() {
-  if(!selectedLoginProfile) { alert('Selecciona un perfil'); return; }
-  currentProfile = selectedLoginProfile;
-  currentUser = currentProfile === 'admin' ? 'Administrador' : document.getElementById('login-user-name').value;
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  setupApp();
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('login-loading').style.display = 'none';
 }
 
 function doLogout() {
-  currentProfile = null; currentUser = null; selectedLoginProfile = null;
+  currentProfile = null; currentUser = null; currentEmail = null;
+  google.accounts.id.disableAutoSelect();
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
-  document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('selected'));
-  document.getElementById('login-user-select').style.display = 'none';
+  document.getElementById('login-error').style.display = 'none';
 }
 
 function setupApp() {
@@ -1149,7 +1157,8 @@ function showToast(msg,type='ok'){
 }
 
 // ===== INTEGRACIÓN GAS =====
-let gasUrl = localStorage.getItem('gasUrl') || '';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwlJNIyTNbxKwpGGyfqIUPYsjCz2QiHUijtJFsAwGTV612SS9cDKW3pGlESHAo2hpUs7A/exec';
+let gasUrl = GAS_URL;
 
 function guardarGasUrl() {
   const url = document.getElementById('gas-url-input').value.trim();
@@ -1184,6 +1193,7 @@ async function testIntegracion() {
   res_el.innerHTML = '<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:8px 12px;font-size:12px;color:#1E40AF;">⏳ Enviando cita de prueba a Google...</div>';
   const payload = {
     tipo: 'nueva_cita',
+    userEmail: currentEmail,
     profesionalKey: 'kine',
     profesionalLabel: '🦴 Kinesiología',
     atletaNombre: 'ATLETA DE PRUEBA',
