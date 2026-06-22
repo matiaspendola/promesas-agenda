@@ -426,7 +426,22 @@ textarea.fc{resize:vertical;min-height:68px;}
       </div>
     </div>
 
-  
+    <!-- ===== MI DISPONIBILIDAD ===== -->
+    <div id="view-disponibilidad" class="view">
+      <div class="page-hdr">
+        <div><div class="page-title">Mi Disponibilidad</div><div class="page-sub" id="disp-sub">Define tus días y horarios de atención</div></div>
+        <button class="btn btn-primary" onclick="saveDisponibilidad()">💾 Guardar disponibilidad</button>
+      </div>
+      <div class="alert" style="background:#EFF6FF;border:1px solid #BFDBFE;color:#1E40AF;margin-bottom:14px;">
+        <div class="alert-icon">📅</div>
+        <div class="alert-body"><b>¿Cómo funciona?</b> Activa los días que atiendes y define tu franja horaria. El sistema generará automáticamente bloques de 60 minutos y solo permitirá agendar citas dentro de tu disponibilidad, evitando topes.</div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Horario semanal</div><span style="font-size:11px;color:var(--gt);" id="disp-resumen"></span></div>
+        <div id="disp-dias"></div>
+      </div>
+    </div>
+
     <!-- ===== INTEGRACIÓN ===== -->
     <div id="view-integracion" class="view">
       <div class="page-header">
@@ -535,7 +550,7 @@ textarea.fc{resize:vertical;min-height:68px;}
         <div class="ppill kine" onclick="selProf('kine','🦴 Kinesiología','Kin. Catalina Camino',this)"><div class="em">🦴</div><div class="pn">Kinesiología</div><div class="ps">Kin. C. Camino</div></div>
         <div class="ppill psico" onclick="selProf('psico','🧠 Psicología','Ps. Mario Pidal',this)"><div class="em">🧠</div><div class="pn">Psicología</div><div class="ps">Ps. M. Pidal</div></div>
         <div class="ppill nutri" onclick="selProf('nutri','🥗 Nutrición','Nut. Josefina Henríquez',this)"><div class="em">🥗</div><div class="pn">Nutrición</div><div class="ps">Nut. J. Henríquez</div></div>
-        <div class="ppill medico" onclick="selProf('medico','🩺 Médico','Dr. Juan Manuel Guzmán',this)"><div class="em">🩺</div><div class="pn">Médico</div><div class="ps">Kin. C. Camino</div></div>
+        <div class="ppill medico" onclick="selProf('medico','🩺 Médico','Dr. Juan Manuel Guzmán',this)"><div class="em">🩺</div><div class="pn">Médico</div><div class="ps">Dr. J.M. Guzmán</div></div>
         <div class="ppill profis" onclick="selProf('profis','💪 Prep. Física','Prof. Matías Péndola',this)"><div class="em">💪</div><div class="pn">Prep. Física</div><div class="ps">Prof. M. Péndola</div></div>
       </div>
       <div id="prof-sel-info" style="display:none;" class="nbox blue">✅ <span id="prof-sel-txt"></span></div>
@@ -738,7 +753,7 @@ function showLoginError(msg) {
 
 function doLogout() {
   currentProfile = null; currentUser = null; currentEmail = null; currentProfKey = null;
-  TODAY_CITAS = []; CITAS_DATA = []; CAL_EVENTS = []; OCUP_BASE = [];
+  TODAY_CITAS = []; CITAS_DATA = []; CAL_EVENTS = [];
   google.accounts.id.disableAutoSelect();
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
@@ -800,19 +815,102 @@ function populateTecnicoDropdown() {
 }
 
 // ===== VIEWS =====
-const allViews = ['dashboard','agenda','citas','atletas','metricas'];
+const allViews = ['dashboard','disponibilidad','agenda','citas','atletas','metricas','integracion'];
 function showView(v) {
   allViews.forEach(x => document.getElementById('view-'+x)?.classList.remove('active'));
   document.getElementById('view-'+v)?.classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
   const p = PERFILES[currentProfile];
   if(v==='dashboard') setupDashboard();
+  if(v==='disponibilidad') setupDisponibilidad();
   if(v==='agenda') { setupAgenda(); renderCalendar(); }
   if(v==='citas') { setupCitas(); renderCitas(); }
   if(v==='atletas') renderAtletas();
   if(v==='metricas') renderMetricas();
   if(v==='integracion') updateGasStatus();
 }
+
+// ===== MI DISPONIBILIDAD =====
+const DIAS_SEMANA = [
+  {dia:1,lbl:'Lunes'},{dia:2,lbl:'Martes'},{dia:3,lbl:'Miércoles'},
+  {dia:4,lbl:'Jueves'},{dia:5,lbl:'Viernes'},{dia:6,lbl:'Sábado'},{dia:0,lbl:'Domingo'},
+];
+let dispConfig = {};
+function HORAS_OPTS(){const o=[];for(let h=7;h<=21;h++){o.push(String(h).padStart(2,'0')+':00');if(h<21)o.push(String(h).padStart(2,'0')+':30');}return o;}
+function _bloques60(c){const[hi,mi]=c.inicio.split(':').map(Number);const[hf,mf]=c.fin.split(':').map(Number);return Math.max(0,Math.floor(((hf*60+mf)-(hi*60+mi))/60));}
+async function setupDisponibilidad(){
+  if(!currentProfKey){
+    document.getElementById('disp-dias').innerHTML='<div style="padding:24px;text-align:center;color:var(--gt);">Tu cuenta no tiene un perfil profesional asociado, por lo que no gestiona disponibilidad.</div>';
+    return;
+  }
+  document.getElementById('disp-sub').textContent='Define tus días y horarios · '+currentUser;
+  dispConfig={};
+  DIAS_SEMANA.forEach(d=>dispConfig[d.dia]={activo:false,inicio:'09:00',fin:'13:00'});
+  document.getElementById('disp-dias').innerHTML='<div style="padding:24px;text-align:center;color:var(--gt);">Cargando…</div>';
+  try{
+    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({tipo:'get_disponibilidad_config',userEmail:currentEmail,profKey:currentProfKey})});
+    const data=await res.json();
+    if(data.ok&&data.dias)data.dias.forEach(d=>{dispConfig[d.dia]={activo:d.activo,inicio:d.inicio,fin:d.fin};});
+  }catch(e){}
+  renderDispDias();
+}
+function renderDispDias(){
+  const cont=document.getElementById('disp-dias');
+  const opts=HORAS_OPTS();
+  cont.innerHTML=DIAS_SEMANA.map(d=>{
+    const c=dispConfig[d.dia];
+    return `<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--borde);flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:8px;min-width:135px;cursor:pointer;">
+        <input type="checkbox" ${c.activo?'checked':''} onchange="dispToggle(${d.dia},this.checked)" style="width:16px;height:16px;cursor:pointer;">
+        <b style="font-size:13px;${c.activo?'':'color:var(--gt);'}">${d.lbl}</b>
+      </label>
+      <div style="display:flex;align-items:center;gap:8px;${c.activo?'':'opacity:.35;pointer-events:none;'}">
+        <select class="fc" style="width:auto;min-width:90px;" onchange="dispSet(${d.dia},'inicio',this.value)">${opts.map(h=>`<option ${h===c.inicio?'selected':''}>${h}</option>`).join('')}</select>
+        <span style="color:var(--gt);">a</span>
+        <select class="fc" style="width:auto;min-width:90px;" onchange="dispSet(${d.dia},'fin',this.value)">${opts.map(h=>`<option ${h===c.fin?'selected':''}>${h}</option>`).join('')}</select>
+      </div>
+      <span style="margin-left:auto;font-size:11px;font-weight:600;color:${c.activo?'var(--verde)':'var(--gt)'};">${c.activo?'~'+_bloques60(c)+' bloques de 60 min':'No atiende'}</span>
+    </div>`;
+  }).join('');
+  const activos=Object.values(dispConfig).filter(c=>c.activo).length;
+  const totalBloques=Object.values(dispConfig).filter(c=>c.activo).reduce((a,c)=>a+_bloques60(c),0);
+  document.getElementById('disp-resumen').textContent=activos+' días activos · ~'+totalBloques+' cupos/semana';
+}
+function dispToggle(dia,val){dispConfig[dia].activo=val;renderDispDias();}
+function dispSet(dia,campo,val){dispConfig[dia][campo]=val;renderDispDias();}
+async function saveDisponibilidad(){
+  if(!currentProfKey){showToast('Tu cuenta no gestiona disponibilidad','err');return;}
+  const dias=DIAS_SEMANA.map(d=>({dia:d.dia,inicio:dispConfig[d.dia].inicio,fin:dispConfig[d.dia].fin,activo:dispConfig[d.dia].activo}));
+  for(const d of dias){if(d.activo&&d.fin<=d.inicio){showToast('La hora de fin debe ser mayor a la de inicio','err');return;}}
+  try{
+    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({tipo:'guardar_disponibilidad',userEmail:currentEmail,profKey:currentProfKey,dias})});
+    const data=await res.json();
+    if(data.ok)showToast('✅ Disponibilidad guardada correctamente');
+    else showToast('❌ '+(data.error||'Error al guardar'),'err');
+  }catch(e){showToast('❌ Error de conexión','err');}
+}
+
+// ===== SLOTS (helpers compartidos agendar/reagendar) =====
+function hmsg(t){return `<div style="grid-column:1/-1;text-align:center;color:var(--gt);padding:18px;font-size:13px;">${t}</div>`;}
+function renderSlots(grid,d,prof,onPick){
+  grid.innerHTML='';
+  if(!d||!d.ok){grid.innerHTML=hmsg('Error consultando disponibilidad');return;}
+  if(!d.trabaja){grid.innerHTML=hmsg('⚠️ '+(prof&&prof.nombre?prof.nombre:'El profesional')+' no atiende este día o no ha configurado su disponibilidad.');return;}
+  const libres=new Set(d.slotsLibres||[]);
+  const todos=[];let t=d.ventana.inicio;while(t<d.ventana.fin){todos.push(t);t=addMin(t,30);}
+  if(!todos.length){grid.innerHTML=hmsg('Sin horarios definidos para este día');return;}
+  let anyFree=false;
+  todos.forEach(h=>{
+    const free=libres.has(h);if(free)anyFree=true;
+    const btn=document.createElement('div');
+    btn.className='hbtn'+(free?'':' ocup');
+    btn.innerHTML=`${h}<span class="hlbl">${free?'hasta '+addMin(h,60):'ocupado'}</span>`;
+    if(free)btn.onclick=()=>{grid.querySelectorAll('.hbtn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');onPick(h);};
+    grid.appendChild(btn);
+  });
+  if(!anyFree)grid.insertAdjacentHTML('afterbegin',hmsg('Todos los horarios están ocupados en esta fecha.'));
+}
+function todayStr(){return new Date().toISOString().slice(0,10);}
 
 // ===== DATA (cargada desde GAS) =====
 let TODAY_CITAS = [];
@@ -847,8 +945,8 @@ async function loadCitas() {
     if (!data.ok) return;
     const all = (data.citas || []).map(citaToLocal);
     CITAS_DATA = all;
-    const todayStr = new Date().toISOString().slice(0, 10);
-    TODAY_CITAS = all.filter(c => c.fecha === todayStr).map(c => ({ hora: c.hora, atleta: c.atleta, polo: c.polo, tec: c.tec, prof: c.prof, profNom: c.profNom, estado: c.estado }));
+    const hoy = todayStr();
+    TODAY_CITAS = all.filter(c => c.fecha === hoy).map(c => ({ eventoId: c.eventoId, hora: c.hora, atleta: c.atleta, polo: c.polo, tec: c.tec, prof: c.prof, profNom: c.profNom, estado: c.estado }));
     CAL_EVENTS = all.map(c => ({ d: c.d, m: c.m, y: c.y, hora: c.hora, atleta: c.atleta.split(' ').slice(0,2).join(' '), prof: c.prof, estado: c.estado }));
   } catch(e) { console.warn('loadCitas error', e); }
 }
@@ -863,8 +961,16 @@ function setupDashboard() {
   const conteo = {};
   profs.forEach(p => { conteo[p.key] = CITAS_DATA.filter(c => c.prof === p.key && c.estado !== 'suspendida').length; });
   stats.innerHTML = profs.map(s=>`<div class="stat-card"><div class="stat-icon" style="background:var(--${s.key}-bg)">${s.ico}</div><div class="stat-num" style="color:var(--${s.key})">${conteo[s.key]}</div><div class="stat-lbl">${s.lbl}</div></div>`).join('');
-  // alert solo admin y prof
-  document.getElementById('dash-alert').style.display = currentProfile !== 'entrenador' ? '' : 'none';
+  // alert dinámico: citas suspendidas hoy
+  const hoy = todayStr();
+  const suspHoy = CITAS_DATA.filter(c => c.estado==='suspendida' && c.fecha===hoy);
+  const alertEl = document.getElementById('dash-alert');
+  if(suspHoy.length && currentProfile !== 'entrenador'){
+    alertEl.style.display = '';
+    alertEl.querySelector('.alert-body').innerHTML = `<b>Cita${suspHoy.length>1?'s':''} suspendida${suspHoy.length>1?'s':''} hoy: ${suspHoy.map(c=>c.atleta.split(' ').slice(0,2).join(' ')+' — '+c.hora+' · '+c.profNom).join(' · ')}</b>Revisa y reagenda desde Gestión de Citas.`;
+  } else {
+    alertEl.style.display = 'none';
+  }
   // accion
   const ab = document.getElementById('dash-action-btn');
   ab.innerHTML = currentProfile !== 'entrenador' ? `<button class="btn btn-primary" onclick="openModal()">+ Agendar Cita</button>` : `<button class="btn btn-primary" onclick="openModal()">+ Solicitar Hora</button>`;
@@ -886,7 +992,7 @@ function setupDashboard() {
     <td><b>${c.atleta.split(' ').slice(0,2).join(' ')}</b></td>
     <td><span class="badge b-${c.prof}">${c.profNom}</span></td>
     <td><span class="badge ${eb[c.estado]}">${el[c.estado]}</span></td>
-    <td>${(c.estado==='confirmada'||c.estado==='pendiente')&&(currentProfile==='profesional'||currentProfile==='admin_profesional'||currentProfile==='admin')?`<button class="btn btn-warn btn-sm" onclick="openSusp('${c.atleta}','${c.hora}','${c.profNom}','${c.eventoId||''}')">⏸</button>`:''}</td>
+    <td>${(c.estado==='confirmada'||c.estado==='pendiente')&&(currentProfile==='profesional'||currentProfile==='admin_profesional'||currentProfile==='admin')?`<button class="btn btn-warn btn-sm" onclick="openSusp('${c.eventoId||''}')">⏸</button>`:''}</td>
   </tr>`).join('');
 }
 
@@ -965,8 +1071,8 @@ function renderCitas() {
       <td><span class="badge ${eb[c.estado]}">${el[c.estado]}</span></td>
       <td style="display:flex;gap:4px;flex-wrap:wrap;">
         <button class="btn btn-ghost btn-sm">Ver</button>
-        ${canSusp?`<button class="btn btn-warn btn-sm" onclick="openSusp('${c.atleta}','${c.hora}','${c.profNom}','${c.eventoId||''}')">⏸ Suspender</button>`:''}
-        ${canReag?`<button class="btn btn-verde btn-sm" onclick="openReagendar('${c.atleta}','${c.profNom}')">📅 Reagendar</button>`:''}
+        ${canSusp?`<button class="btn btn-warn btn-sm" onclick="openSusp('${c.eventoId||''}')">⏸ Suspender</button>`:''}
+        ${canReag?`<button class="btn btn-verde btn-sm" onclick="openReagendar('${c.eventoId||''}')">📅 Reagendar</button>`:''}
       </td>`;
     body.appendChild(tr);
   });
@@ -1028,7 +1134,7 @@ function renderMetricas(){
 // ===== MODAL AGENDAR =====
 let cStep=1, selProf_=null, selHora=null;
 const NSTEPS=4;
-function openModal(){document.getElementById('modal-ov').classList.add('open');resetModal();goStep(1);}
+function openModal(){document.getElementById('modal-ov').classList.add('open');resetModal();goStep(1);document.getElementById('f-fecha').min=todayStr();}
 function openModalWithDate(date){openModal();setTimeout(()=>{document.getElementById('f-fecha').value=date;updateHorarios();},100);}
 function closeModal(){document.getElementById('modal-ov').classList.remove('open');}
 function resetModal(){cStep=1;selProf_=null;selHora=null;document.querySelectorAll('.ppill').forEach(p=>p.classList.remove('sel'));document.getElementById('prof-sel-info').style.display='none';}
@@ -1082,38 +1188,18 @@ function autoFillTecEmail(){
   const v=document.getElementById('f-tecnico').value;
   document.getElementById('f-tecnico-email').value=emails[v]||'';
 }
-const FRANJA=[];for(let h=8;h<=17;h++){FRANJA.push(`${String(h).padStart(2,'0')}:00`);if(h<17)FRANJA.push(`${String(h).padStart(2,'0')}:30`);}
-let OCUP_BASE = [];
-function getOcup(base){const s=new Set();base.forEach(h=>{s.add(h);const[hh,mm]=h.split(':').map(Number);const mm2=mm+30;const hh2=mm2>=60?hh+1:hh;const mm2r=mm2>=60?mm2-60:mm2;s.add(`${String(hh2).padStart(2,'0')}:${String(mm2r).padStart(2,'0')}`);});return s;}
 function addMin(t,m){const[h,mn]=t.split(':').map(Number);const tot=h*60+mn+m;return`${String(Math.floor(tot/60)).padStart(2,'0')}:${String(tot%60).padStart(2,'0')}`;}
 async function updateHorarios(){
   const fecha=document.getElementById('f-fecha').value;
   const grid=document.getElementById('hgrid');grid.innerHTML='';selHora=null;
   if(!fecha)return;
-  grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--gt);padding:20px;font-size:13px;">Consultando disponibilidad…</div>';
-  let ocupBase=[];
+  if(!selProf_){grid.innerHTML=hmsg('Selecciona un profesional primero');return;}
+  grid.innerHTML=hmsg('Consultando disponibilidad…');
   try{
-    const profKey=selProf_?selProf_.key:null;
-    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({tipo:'get_disponibilidad',profKey,fecha})});
+    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({tipo:'get_disponibilidad',profKey:selProf_.key,fecha})});
     const d=await res.json();
-    if(d.ok && d.ocupados) ocupBase=d.ocupados;
-    else {
-      // fallback: citas del mismo profesional en esa fecha
-      const citasDia=CITAS_DATA.filter(c=>c.fecha===fecha&&(!profKey||c.prof===profKey)&&c.estado!=='suspendida');
-      ocupBase=citasDia.map(c=>c.hora);
-    }
-  }catch(e){ ocupBase=[]; }
-  grid.innerHTML='';
-  const ocup=getOcup(ocupBase);
-  FRANJA.forEach(h=>{
-    const btn=document.createElement('div');
-    const o=ocup.has(h);
-    btn.className='hbtn'+(o?' ocup':'');
-    const principal=ocupBase.includes(h);
-    btn.innerHTML=`${h}<span class="hlbl">${o?(principal?'ocupado':'bloqueado'):'hasta '+addMin(h,60)}</span>`;
-    if(!o)btn.onclick=()=>{document.querySelectorAll('.hbtn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');selHora=h;};
-    grid.appendChild(btn);
-  });
+    renderSlots(grid,d,selProf_,h=>{selHora=h;});
+  }catch(e){grid.innerHTML=hmsg('Error consultando disponibilidad');}
 }
 function fillSummary(){
   const pN=selProf_?selProf_.nombre:'—';
@@ -1168,6 +1254,8 @@ async function confirmCita() {
     if (data.ok) {
       closeModal();
       showToast('✅ Cita agendada · Emails enviados · Google Calendar actualizado');
+      await loadCitas();
+      refreshCurrentView();
     } else {
       showToast('❌ ' + (data.error || 'Error al agendar'), 'err');
     }
@@ -1179,13 +1267,21 @@ async function confirmCita() {
   }
 }
 
+// Vuelve a renderizar la vista activa con los datos recién cargados
+function refreshCurrentView(){
+  const active=document.querySelector('.nav-btn.active');
+  if(active&&active.dataset.view)showView(active.dataset.view);
+}
+
 // ===== SUSPENDER =====
 let suspData={};
-function openSusp(atleta,hora,disc,eventoId){
-  suspData={atleta,hora,profNom:disc,eventoId:eventoId||''};
-  document.getElementById('s-atleta').textContent=atleta;
-  document.getElementById('s-hora').textContent=hora;
-  document.getElementById('s-disc').textContent=disc;
+function openSusp(eventoId){
+  const c=CITAS_DATA.find(x=>x.eventoId===eventoId);
+  if(!c){showToast('No se encontró la cita','err');return;}
+  suspData=c;
+  document.getElementById('s-atleta').textContent=c.atleta;
+  document.getElementById('s-hora').textContent=c.fechaDisplay||c.hora;
+  document.getElementById('s-disc').textContent=c.profNom;
   document.getElementById('s-motivo').value='';
   document.getElementById('s-detalle').value='';
   document.getElementById('susp-ov').classList.add('open');
@@ -1194,56 +1290,65 @@ function closeSusp(){document.getElementById('susp-ov').classList.remove('open')
 async function confirmSusp(){
   if(!document.getElementById('s-motivo').value){showToast('Selecciona un motivo','err');return;}
   if(!currentEmail){showToast('No hay sesión activa','err');return;}
+  const detalle=document.getElementById('s-detalle').value.trim();
   const payload={
     tipo:'suspender_cita',
     userEmail:currentEmail,
-    eventoId:suspData.eventoId||'temp-id',
+    eventoId:suspData.eventoId,
+    profesionalKey:suspData.prof,
     atletaNombre:suspData.atleta,
-    motivoSuspension:document.getElementById('s-motivo').value,
+    tecnicoNombre:suspData.tec,
+    tecnicoEmail:suspData.tecEmail,
+    apoderadoNombre:suspData.apodNom,
+    apoderadoEmail:suspData.apodEmail,
+    fechaHoraInicio:suspData.fecha+'T'+suspData.hora,
+    motivoSuspension:document.getElementById('s-motivo').value+(detalle?(' — '+detalle):''),
   };
+  const btn=document.querySelector('#susp-ov .btn-danger');
   try{
-    const btn=document.querySelector('#susp-ov .btn-danger');
     btn.disabled=true;btn.textContent='⏳ Suspendiendo...';
     const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
     const data=await res.json();
     if(data.ok){
       closeSusp();
-      showToast(`⏸ Cita suspendida · Notificaciones enviadas`);
-      setTimeout(()=>location.reload(),1500);
+      showToast('⏸ Cita suspendida · Notificaciones enviadas');
+      await loadCitas();
+      refreshCurrentView();
     }else{
       showToast('❌ '+(data.error||'Error al suspender'),'err');
-      btn.disabled=false;btn.textContent='⏸ Confirmar Suspensión';
     }
   }catch(e){
     showToast('❌ Error de conexión','err');
+  }finally{
+    btn.disabled=false;btn.textContent='⏸ Confirmar Suspensión';
   }
 }
 
-// ===== REAGENDAR (solo admin) =====
+// ===== REAGENDAR (admin / admin·prep.física) =====
 let reagData={};
 let reagHora=null;
-function openReagendar(atleta,disc){
-  reagData={atleta,profNom:disc};reagHora=null;
-  document.getElementById('r-atleta').textContent=atleta;
-  document.getElementById('r-disc').textContent=disc;
+function openReagendar(eventoId){
+  const c=CITAS_DATA.find(x=>x.eventoId===eventoId);
+  if(!c){showToast('No se encontró la cita','err');return;}
+  reagData=c;reagHora=null;
+  document.getElementById('r-atleta').textContent=c.atleta;
+  document.getElementById('r-disc').textContent=c.profNom;
   document.getElementById('r-fecha').value='';
-  document.getElementById('r-hgrid').innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--gt);padding:14px;font-size:13px;">Selecciona una fecha primero</div>';
+  document.getElementById('r-fecha').min=todayStr();
+  document.getElementById('r-hgrid').innerHTML=hmsg('Selecciona una fecha primero');
   document.getElementById('reagendar-ov').classList.add('open');
 }
 function closeReagendar(){document.getElementById('reagendar-ov').classList.remove('open');}
-function updateReagendarHorarios(){
+async function updateReagendarHorarios(){
   const fecha=document.getElementById('r-fecha').value;
   const grid=document.getElementById('r-hgrid');grid.innerHTML='';reagHora=null;
   if(!fecha)return;
-  const ocup=getOcup(['10:00','13:30']);
-  FRANJA.forEach(h=>{
-    const btn=document.createElement('div');
-    const o=ocup.has(h);
-    btn.className='hbtn'+(o?' ocup':'');
-    btn.innerHTML=`${h}<span class="hlbl">${o?(OCUP_BASE.includes(h)?'ocupado':'bloqueado'):'hasta '+addMin(h,60)}</span>`;
-    if(!o)btn.onclick=()=>{document.querySelectorAll('#r-hgrid .hbtn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');reagHora=h;};
-    grid.appendChild(btn);
-  });
+  grid.innerHTML=hmsg('Consultando disponibilidad…');
+  try{
+    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({tipo:'get_disponibilidad',profKey:reagData.prof,fecha})});
+    const d=await res.json();
+    renderSlots(grid,d,{nombre:reagData.profNom},h=>{reagHora=h;});
+  }catch(e){grid.innerHTML=hmsg('Error consultando disponibilidad');}
 }
 async function confirmReagendar(){
   if(!document.getElementById('r-fecha').value||!reagHora){showToast('Selecciona fecha y horario','err');return;}
@@ -1251,25 +1356,35 @@ async function confirmReagendar(){
   const payload={
     tipo:'reagendar_cita',
     userEmail:currentEmail,
-    eventoId:reagData.eventoId||'temp-id',
+    eventoId:reagData.eventoId,
+    profesionalKey:reagData.prof,
+    profesionalLabel:reagData.profNom,
     atletaNombre:reagData.atleta,
+    polo:reagData.polo,
+    tecnicoNombre:reagData.tec,
+    tecnicoEmail:reagData.tecEmail,
+    apoderadoNombre:reagData.apodNom,
+    apoderadoEmail:reagData.apodEmail,
+    motivo:(reagData.motivo||'')+' (reagendada: '+(document.getElementById('r-motivo').value||'sin detalle')+')',
     nuevaFechaHoraInicio:document.getElementById('r-fecha').value+'T'+reagHora+':00',
   };
+  const btn=document.querySelector('#reagendar-ov .btn-verde');
   try{
-    const btn=document.querySelector('#reagendar-ov .btn-verde');
     btn.disabled=true;btn.textContent='⏳ Reagendando...';
     const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
     const data=await res.json();
     if(data.ok){
       closeReagendar();
-      showToast(`📅 Cita reagendada · Notificaciones enviadas`);
-      setTimeout(()=>location.reload(),1500);
+      showToast('📅 Cita reagendada · Notificaciones enviadas');
+      await loadCitas();
+      refreshCurrentView();
     }else{
       showToast('❌ '+(data.error||'Error al reagendar'),'err');
-      btn.disabled=false;btn.textContent='✅ Confirmar Reagendamiento';
     }
   }catch(e){
     showToast('❌ Error de conexión','err');
+  }finally{
+    btn.disabled=false;btn.textContent='✅ Confirmar Reagendamiento';
   }
 }
 
