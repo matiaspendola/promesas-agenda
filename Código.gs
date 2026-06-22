@@ -444,16 +444,16 @@ function emailTecnicoHtml(data, prof) {
   return `
 <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
   <div style="background:#003087;padding:16px 20px;border-radius:8px 8px 0 0;">
-    <h2 style="color:white;margin:0;font-size:16px;">📨 Solicitud registrada — Promesas Chile</h2>
+    <h2 style="color:white;margin:0;font-size:16px;">✉ Solicitud registrada — Promesas Chile</h2>
   </div>
   <div style="padding:20px;border:1px solid #E2E6EF;border-top:none;border-radius:0 0 8px 8px;background:#fff;">
     <p>Estimado/a <b>${data.tecnicoNombre}</b>,</p>
     <p style="margin-top:10px;">La solicitud de hora para <b>${data.atletaNombre}</b> fue <b>registrada exitosamente</b> en el sistema.</p>
     <div style="background:#F5F6FA;border-radius:8px;padding:14px;margin:14px 0;border-left:4px solid #003087;">
-      <p><b>👨‍⚕️ Profesional:</b> ${prof.nombre}</p>
-      <p><b>📅 Fecha y hora:</b> ${data.fechaHoraInicio}</p>
-      <p><b>🏃 Atleta:</b> ${data.atletaNombre} · ${data.polo}</p>
-      <p><b>📋 Motivo:</b> ${data.motivo || 'Sin especificar'}</p>
+      <p><b>⚕ Profesional:</b> ${prof.nombre}</p>
+      <p><b>• Fecha y hora:</b> ${data.fechaHoraInicio}</p>
+      <p><b>• Atleta:</b> ${data.atletaNombre} · ${data.polo}</p>
+      <p><b>• Motivo:</b> ${data.motivo || 'Sin especificar'}</p>
     </div>
     <p style="color:#6B7280;font-size:12px;">La confirmación de asistencia fue enviada directamente al apoderado. Te notificaremos ante cualquier cambio de horario.</p>
     <p style="margin-top:16px;">Saludos,<br><b>${CONFIG.nombrePrograma}</b></p>
@@ -474,11 +474,11 @@ function emailApoderadoHtml(data, prof, fin) {
     <p>Estimado/a <b>${data.apoderadoNombre}</b>,</p>
     <p style="margin-top:10px;">Confirmamos la siguiente cita para <b>${data.atletaNombre}</b>:</p>
     <div style="background:#F0FDF4;border-radius:8px;padding:14px;margin:14px 0;border-left:4px solid #16A34A;">
-      <p><b>📅 Fecha:</b> ${fechaStr}</p>
-      <p><b>🕐 Hora:</b> ${horaStr} a ${horaFin}</p>
-      <p><b>👨‍⚕️ Profesional:</b> ${prof.nombre}</p>
-      <p><b>📍 Lugar:</b> ${CONFIG.lugar}</p>
-      <p><b>📋 Motivo:</b> ${data.motivo || 'Sin especificar'}</p>
+      <p><b>• Fecha:</b> ${fechaStr}</p>
+      <p><b>• Hora:</b> ${horaStr} a ${horaFin}</p>
+      <p><b>⚕ Profesional:</b> ${prof.nombre}</p>
+      <p><b>• Lugar:</b> ${CONFIG.lugar}</p>
+      <p><b>• Motivo:</b> ${data.motivo || 'Sin especificar'}</p>
     </div>
     <p>Por favor confirme asistencia respondiendo este correo. En caso de no poder asistir, avise con al menos <b>24 horas de anticipación</b>.</p>
     <p style="margin-top:16px;">Saludos cordiales,<br><b>${CONFIG.nombrePrograma}</b></p>

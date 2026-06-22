@@ -26,7 +26,7 @@ $manifest = [System.IO.File]::ReadAllText("C:\Users\Matias\Agenda_promesas\appss
 
 $payload = @{
   files = @(
-    @{ name = "Código"; type = "SERVER_JS"; source = $codigo },
+    @{ name = "Codigo"; type = "SERVER_JS"; source = $codigo },
     @{ name = "appsscript"; type = "JSON"; source = $manifest }
   )
 }
