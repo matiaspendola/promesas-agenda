@@ -124,14 +124,14 @@ function agendarCita(data) {
   const disp = getDisponibilidad({ profKey: data.profesionalKey, fecha: fechaSolo });
   if (!disp.trabaja) throw new Error('El profesional no tiene disponibilidad configurada para ese día');
 
-  // Prevenir doble reserva (cada cita bloquea 60 min = dos slots de 30)
-  const ss = SpreadsheetApp.openById(CONFIG.sheetId);
-  const ocupadas = _citasOcupadas(ss, data.profesionalKey, fechaSolo);
-  const bloqueados = new Set();
-  ocupadas.forEach(h => { bloqueados.add(h); bloqueados.add(_addMin(h, 30)); });
-  if (bloqueados.has(horaSolo) || bloqueados.has(_addMin(horaSolo, 30))) {
-    throw new Error('Ese horario ya está ocupado. Actualiza y elige otro.');
+  // El horario debe caer dentro de alguna franja válida (libre)
+  if (disp.slotsLibres.indexOf(horaSolo) === -1) {
+    // Si el slot existe pero está ocupado, mensaje específico; si no existe, fuera de franja
+    const existe = (disp.slots || []).some(s => s.hora === horaSolo);
+    throw new Error(existe ? 'Ese horario ya está ocupado. Actualiza y elige otro.' : 'Ese horario está fuera de la disponibilidad del profesional');
   }
+
+  const ss = SpreadsheetApp.openById(CONFIG.sheetId);
 
   // 1. Crear evento en Google Calendar del profesional
   const cal = CalendarApp.getCalendarById(prof.calendarId)
@@ -298,32 +298,40 @@ function getDisponibilidadConfig(data) {
 }
 
 function getDisponibilidad(data) {
-  // Calcula los slots de 30 min libres para un profesional en una fecha concreta.
+  // Calcula los slots de 30 min de un profesional en una fecha concreta.
+  // Soporta múltiples franjas por día (ej: 06:00-08:00 y 16:00-18:00).
   // data: { profKey, fecha:'YYYY-MM-DD' }
-  if (!data.fecha) return { ok: true, trabaja: false, slotsLibres: [], ocupados: [] };
+  if (!data.fecha) return { ok: true, trabaja: false, slots: [], slotsLibres: [], ocupados: [] };
   const dow = new Date(data.fecha + 'T00:00:00').getDay(); // 0=Dom .. 6=Sáb
 
   const cfg = getDisponibilidadConfig({ profKey: data.profKey });
-  const diaCfg = cfg.dias.find(d => d.dia === dow && d.activo);
-  if (!diaCfg) return { ok: true, trabaja: false, slotsLibres: [], ocupados: [] };
+  const franjas = cfg.dias.filter(d => d.dia === dow && d.activo);
+  if (!franjas.length) return { ok: true, trabaja: false, slots: [], slotsLibres: [], ocupados: [] };
 
   const ss = SpreadsheetApp.openById(CONFIG.sheetId);
   const ocupados = _citasOcupadas(ss, data.profKey, data.fecha);
   const bloqueados = new Set();
   ocupados.forEach(h => { bloqueados.add(h); bloqueados.add(_addMin(h, 30)); });
 
-  // Slots de 30 min dentro de la ventana, que admitan un bloque de 60 min y estén libres
-  const slots = _slots30(diaCfg.inicio, diaCfg.fin);
-  const slotsLibres = slots.filter(h =>
-    _addMin(h, 60) <= diaCfg.fin &&
-    !bloqueados.has(h) &&
-    !bloqueados.has(_addMin(h, 30))
-  );
+  // Generar slots de 30 min de todas las franjas, ordenados y sin duplicar
+  franjas.sort((a, b) => a.inicio < b.inicio ? -1 : 1);
+  const vistos = {};
+  const slots = [];
+  franjas.forEach(fr => {
+    _slots30(fr.inicio, fr.fin).forEach(h => {
+      if (_addMin(h, 60) > fr.fin) return;   // el bloque de 60 min no cabe en la franja
+      if (vistos[h]) return;                 // evitar duplicado si las franjas se solapan
+      vistos[h] = true;
+      const libre = !bloqueados.has(h) && !bloqueados.has(_addMin(h, 30));
+      slots.push({ hora: h, fin: _addMin(h, 60), libre: libre });
+    });
+  });
+  const slotsLibres = slots.filter(s => s.libre).map(s => s.hora);
 
   return {
     ok: true,
     trabaja: true,
-    ventana: { inicio: diaCfg.inicio, fin: diaCfg.fin },
+    slots: slots,
     slotsLibres: slotsLibres,
     ocupados: ocupados,
   };

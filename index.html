@@ -822,9 +822,11 @@ const DIAS_SEMANA = [
   {dia:1,lbl:'Lunes'},{dia:2,lbl:'Martes'},{dia:3,lbl:'Miércoles'},
   {dia:4,lbl:'Jueves'},{dia:5,lbl:'Viernes'},{dia:6,lbl:'Sábado'},{dia:0,lbl:'Domingo'},
 ];
+// dispConfig: { dia: { activo:bool, franjas:[{inicio,fin}, ...] } }
 let dispConfig = {};
-function HORAS_OPTS(){const o=[];for(let h=7;h<=21;h++){o.push(String(h).padStart(2,'0')+':00');if(h<21)o.push(String(h).padStart(2,'0')+':30');}return o;}
-function _bloques60(c){const[hi,mi]=c.inicio.split(':').map(Number);const[hf,mf]=c.fin.split(':').map(Number);return Math.max(0,Math.floor(((hf*60+mf)-(hi*60+mi))/60));}
+function HORAS_OPTS(){const o=[];for(let h=6;h<=22;h++){o.push(String(h).padStart(2,'0')+':00');if(h<22)o.push(String(h).padStart(2,'0')+':30');}return o;}
+function _bloques60(inicio,fin){const[hi,mi]=inicio.split(':').map(Number);const[hf,mf]=fin.split(':').map(Number);return Math.max(0,Math.floor(((hf*60+mf)-(hi*60+mi))/60));}
+function _bloquesDia(c){return c.franjas.reduce((a,fr)=>a+_bloques60(fr.inicio,fr.fin),0);}
 async function setupDisponibilidad(){
   if(!currentProfKey){
     document.getElementById('disp-dias').innerHTML='<div style="padding:24px;text-align:center;color:var(--gt);">Tu cuenta no tiene un perfil profesional asociado, por lo que no gestiona disponibilidad.</div>';
@@ -832,12 +834,16 @@ async function setupDisponibilidad(){
   }
   document.getElementById('disp-sub').textContent='Define tus días y horarios · '+currentUser;
   dispConfig={};
-  DIAS_SEMANA.forEach(d=>dispConfig[d.dia]={activo:false,inicio:'09:00',fin:'13:00'});
+  DIAS_SEMANA.forEach(d=>dispConfig[d.dia]={activo:false,franjas:[{inicio:'09:00',fin:'13:00'}]});
   document.getElementById('disp-dias').innerHTML='<div style="padding:24px;text-align:center;color:var(--gt);">Cargando…</div>';
   try{
     const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({tipo:'get_disponibilidad_config',userEmail:currentEmail,profKey:currentProfKey})});
     const data=await res.json();
-    if(data.ok&&data.dias)data.dias.forEach(d=>{dispConfig[d.dia]={activo:d.activo,inicio:d.inicio,fin:d.fin};});
+    if(data.ok&&data.dias&&data.dias.length){
+      const grp={};
+      data.dias.forEach(d=>{ if(!d.activo)return; if(!grp[d.dia])grp[d.dia]=[]; grp[d.dia].push({inicio:d.inicio,fin:d.fin}); });
+      Object.keys(grp).forEach(dia=>{ grp[dia].sort((a,b)=>a.inicio<b.inicio?-1:1); dispConfig[dia]={activo:true,franjas:grp[dia]}; });
+    }
   }catch(e){}
   renderDispDias();
 }
@@ -846,29 +852,44 @@ function renderDispDias(){
   const opts=HORAS_OPTS();
   cont.innerHTML=DIAS_SEMANA.map(d=>{
     const c=dispConfig[d.dia];
-    return `<div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--borde);flex-wrap:wrap;">
-      <label style="display:flex;align-items:center;gap:8px;min-width:135px;cursor:pointer;">
+    const franjasHtml=c.franjas.map((fr,idx)=>`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;${c.activo?'':'opacity:.35;pointer-events:none;'}">
+        <select class="fc" style="width:auto;min-width:88px;" onchange="dispSetFranja(${d.dia},${idx},'inicio',this.value)">${opts.map(h=>`<option ${h===fr.inicio?'selected':''}>${h}</option>`).join('')}</select>
+        <span style="color:var(--gt);">a</span>
+        <select class="fc" style="width:auto;min-width:88px;" onchange="dispSetFranja(${d.dia},${idx},'fin',this.value)">${opts.map(h=>`<option ${h===fr.fin?'selected':''}>${h}</option>`).join('')}</select>
+        ${c.franjas.length>1?`<button class="btn btn-ghost btn-sm" title="Quitar franja" onclick="dispRemoveFranja(${d.dia},${idx})">✕</button>`:''}
+      </div>`).join('');
+    return `<div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;border-bottom:1px solid var(--borde);flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:8px;min-width:135px;cursor:pointer;padding-top:6px;">
         <input type="checkbox" ${c.activo?'checked':''} onchange="dispToggle(${d.dia},this.checked)" style="width:16px;height:16px;cursor:pointer;">
         <b style="font-size:13px;${c.activo?'':'color:var(--gt);'}">${d.lbl}</b>
       </label>
-      <div style="display:flex;align-items:center;gap:8px;${c.activo?'':'opacity:.35;pointer-events:none;'}">
-        <select class="fc" style="width:auto;min-width:90px;" onchange="dispSet(${d.dia},'inicio',this.value)">${opts.map(h=>`<option ${h===c.inicio?'selected':''}>${h}</option>`).join('')}</select>
-        <span style="color:var(--gt);">a</span>
-        <select class="fc" style="width:auto;min-width:90px;" onchange="dispSet(${d.dia},'fin',this.value)">${opts.map(h=>`<option ${h===c.fin?'selected':''}>${h}</option>`).join('')}</select>
+      <div style="flex:1;min-width:230px;">
+        ${franjasHtml}
+        ${c.activo?`<button class="btn btn-ghost btn-sm" onclick="dispAddFranja(${d.dia})" style="margin-top:2px;">+ Agregar franja</button>`:''}
       </div>
-      <span style="margin-left:auto;font-size:11px;font-weight:600;color:${c.activo?'var(--verde)':'var(--gt)'};">${c.activo?'~'+_bloques60(c)+' bloques de 60 min':'No atiende'}</span>
+      <span style="font-size:11px;font-weight:600;color:${c.activo?'var(--verde)':'var(--gt)'};padding-top:6px;">${c.activo?'~'+_bloquesDia(c)+' bloques de 60 min':'No atiende'}</span>
     </div>`;
   }).join('');
   const activos=Object.values(dispConfig).filter(c=>c.activo).length;
-  const totalBloques=Object.values(dispConfig).filter(c=>c.activo).reduce((a,c)=>a+_bloques60(c),0);
+  const totalBloques=Object.values(dispConfig).filter(c=>c.activo).reduce((a,c)=>a+_bloquesDia(c),0);
   document.getElementById('disp-resumen').textContent=activos+' días activos · ~'+totalBloques+' cupos/semana';
 }
 function dispToggle(dia,val){dispConfig[dia].activo=val;renderDispDias();}
-function dispSet(dia,campo,val){dispConfig[dia][campo]=val;renderDispDias();}
+function dispSetFranja(dia,idx,campo,val){dispConfig[dia].franjas[idx][campo]=val;renderDispDias();}
+function dispAddFranja(dia){dispConfig[dia].franjas.push({inicio:'09:00',fin:'13:00'});renderDispDias();}
+function dispRemoveFranja(dia,idx){dispConfig[dia].franjas.splice(idx,1);if(!dispConfig[dia].franjas.length)dispConfig[dia].franjas.push({inicio:'09:00',fin:'13:00'});renderDispDias();}
 async function saveDisponibilidad(){
   if(!currentProfKey){showToast('Tu cuenta no gestiona disponibilidad','err');return;}
-  const dias=DIAS_SEMANA.map(d=>({dia:d.dia,inicio:dispConfig[d.dia].inicio,fin:dispConfig[d.dia].fin,activo:dispConfig[d.dia].activo}));
-  for(const d of dias){if(d.activo&&d.fin<=d.inicio){showToast('La hora de fin debe ser mayor a la de inicio','err');return;}}
+  const dias=[];
+  for(const d of DIAS_SEMANA){
+    const c=dispConfig[d.dia];
+    if(!c.activo)continue;
+    for(const fr of c.franjas){
+      if(fr.fin<=fr.inicio){showToast('En '+d.lbl+', la hora de término debe ser mayor a la de inicio','err');return;}
+      dias.push({dia:d.dia,inicio:fr.inicio,fin:fr.fin,activo:true});
+    }
+  }
   try{
     const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({tipo:'guardar_disponibilidad',userEmail:currentEmail,profKey:currentProfKey,dias})});
     const data=await res.json();
@@ -883,16 +904,15 @@ function renderSlots(grid,d,prof,onPick){
   grid.innerHTML='';
   if(!d||!d.ok){grid.innerHTML=hmsg('Error consultando disponibilidad');return;}
   if(!d.trabaja){grid.innerHTML=hmsg('⚠️ '+(prof&&prof.nombre?prof.nombre:'El profesional')+' no atiende este día o no ha configurado su disponibilidad.');return;}
-  const libres=new Set(d.slotsLibres||[]);
-  const todos=[];let t=d.ventana.inicio;while(t<d.ventana.fin){todos.push(t);t=addMin(t,30);}
-  if(!todos.length){grid.innerHTML=hmsg('Sin horarios definidos para este día');return;}
+  const slots=d.slots||[];
+  if(!slots.length){grid.innerHTML=hmsg('Sin horarios definidos para este día');return;}
   let anyFree=false;
-  todos.forEach(h=>{
-    const free=libres.has(h);if(free)anyFree=true;
+  slots.forEach(s=>{
+    if(s.libre)anyFree=true;
     const btn=document.createElement('div');
-    btn.className='hbtn'+(free?'':' ocup');
-    btn.innerHTML=`${h}<span class="hlbl">${free?'hasta '+addMin(h,60):'ocupado'}</span>`;
-    if(free)btn.onclick=()=>{grid.querySelectorAll('.hbtn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');onPick(h);};
+    btn.className='hbtn'+(s.libre?'':' ocup');
+    btn.innerHTML=`${s.hora}<span class="hlbl">${s.libre?'hasta '+(s.fin||addMin(s.hora,60)):'ocupado'}</span>`;
+    if(s.libre)btn.onclick=()=>{grid.querySelectorAll('.hbtn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');onPick(s.hora);};
     grid.appendChild(btn);
   });
   if(!anyFree)grid.insertAdjacentHTML('afterbegin',hmsg('Todos los horarios están ocupados en esta fecha.'));
