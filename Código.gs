@@ -86,6 +86,7 @@ function doPost(e) {
       case 'leer_hoja':           return ok(leerHoja(data));
       case 'validar_usuario':     return ok(validarUsuario(data));
       case 'get_citas':           return ok(getCitas(data));
+      case 'reset_citas':         return ok(resetCitas(data));
       default: return err('Tipo desconocido: ' + data.tipo);
     }
   } catch (e) {
@@ -267,10 +268,11 @@ function guardarDisponibilidad(data) {
     if (rows[i][0] === data.profKey) sheet.deleteRow(i + 1);
   }
 
-  // Insertar solo los días activos
+  // Insertar solo los días activos. Las horas se guardan como MINUTOS (entero)
+  // para que Google Sheets no las convierta en valores de tiempo con desfase horario.
   const now = new Date().toISOString();
   (data.dias || []).forEach(d => {
-    if (d.activo) sheet.appendRow([data.profKey, d.dia, d.inicio, d.fin, 'si', now]);
+    if (d.activo) sheet.appendRow([data.profKey, d.dia, _toMin(d.inicio), _toMin(d.fin), 'si', now]);
   });
   return { ok: true, msg: 'Disponibilidad guardada' };
 }
@@ -286,8 +288,8 @@ function getDisponibilidadConfig(data) {
     if (rows[i][0] === data.profKey) {
       dias.push({
         dia: Number(rows[i][1]),
-        inicio: _hhmm(rows[i][2]),
-        fin: _hhmm(rows[i][3]),
+        inicio: _minToHHMM(rows[i][2]),
+        fin: _minToHHMM(rows[i][3]),
         activo: String(rows[i][4]).toLowerCase() === 'si',
       });
     }
@@ -336,8 +338,8 @@ function _citasOcupadas(ss, profKey, fecha) {
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
     const estado = String(r[13] || '').toLowerCase();
-    if (r[10] === profKey && String(r[1]) === String(fecha) && estado !== 'suspendida' && r[2]) {
-      horas.push(_hhmm(r[2]));
+    if (r[10] === profKey && _fechaTxt(ss, r[1]) === String(fecha) && estado !== 'suspendida' && r[2]) {
+      horas.push(_horaTxt(ss, r[2]));
     }
   }
   return horas;
@@ -356,12 +358,31 @@ function _addMin(t, m) {
   return String(Math.floor(tot / 60)).padStart(2, '0') + ':' + String(tot % 60).padStart(2, '0');
 }
 
-// Normaliza una hora a 'HH:MM' (acepta string u objeto Date que devuelve Sheets)
-function _hhmm(v) {
+// Conversión hora <-> minutos (almacenamiento a prueba de zona horaria)
+function _toMin(hhmm) {
+  const [h, m] = String(hhmm).split(':').map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+function _minToHHMM(min) {
+  min = Number(min) || 0;
+  return String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
+}
+
+// Normaliza la hora de una celda de Citas a 'HH:MM'. Si Sheets la guardó como
+// valor de tiempo (Date), la formatea usando la zona horaria de la planilla.
+function _horaTxt(ss, v) {
   if (v instanceof Date) {
-    return String(v.getHours()).padStart(2, '0') + ':' + String(v.getMinutes()).padStart(2, '0');
+    return Utilities.formatDate(v, ss.getSpreadsheetTimeZone(), 'HH:mm');
   }
   return String(v).slice(0, 5);
+}
+
+// Normaliza la fecha de una celda a 'YYYY-MM-DD'
+function _fechaTxt(ss, v) {
+  if (v instanceof Date) {
+    return Utilities.formatDate(v, ss.getSpreadsheetTimeZone(), 'yyyy-MM-dd');
+  }
+  return String(v).slice(0, 10);
 }
 
 // ── GOOGLE SHEETS: REGISTRAR CITA ────────────────────────────
@@ -378,9 +399,14 @@ function registrarEnSheet(data) {
     sheet.getRange(1,1,1,15).setFontWeight('bold');
     sheet.setFrozenRows(1);
   }
+  // Forzar Fecha (B) y Hora (C) como TEXTO para evitar que la zona horaria
+  // de la planilla (por defecto Pacific) las desplace al leerlas.
+  sheet.getRange('B:C').setNumberFormat('@');
+  SpreadsheetApp.flush();
   const fecha = data.fechaHoraInicio ? data.fechaHoraInicio.split('T')[0] : '';
   const hora  = data.fechaHoraInicio ? (data.fechaHoraInicio.split('T')[1]||'').slice(0,5) : '';
-  sheet.appendRow([
+  const fila = sheet.getLastRow() + 1;
+  sheet.getRange(fila, 1, 1, 15).setValues([[
     data.eventoId, fecha, hora,
     data.atletaNombre, data.polo,
     data.tecnicoNombre, data.tecnicoEmail,
@@ -388,7 +414,7 @@ function registrarEnSheet(data) {
     data.profesionalLabel, data.profesionalKey,
     data.tipoBloque, data.motivo || '',
     data.estado || 'Confirmada', data.fechaRegistro,
-  ]);
+  ]]);
 }
 
 function actualizarEstadoSheet(eventoId, nuevoEstado, motivo) {
@@ -538,8 +564,8 @@ function getCitas(data) {
   //          Apoderado | Email Apoderado | Profesional | Disciplina | Tipo Bloque | Motivo | Estado | Fecha Registro
   const citas = rows.slice(1).map(r => ({
     eventoId:    r[0],
-    fecha:       r[1],
-    hora:        r[2],
+    fecha:       _fechaTxt(ss, r[1]),
+    hora:        _horaTxt(ss, r[2]),
     atleta:      r[3],
     polo:        r[4],
     tecNom:      r[5],
@@ -556,6 +582,19 @@ function getCitas(data) {
   // Filtro opcional por profesional
   if (data.profKey) return { ok: true, citas: citas.filter(c => c.prof === data.profKey) };
   return { ok: true, citas };
+}
+
+// ── RESET CITAS (solo admin) ─────────────────────────────────
+// Borra todas las filas de datos de la hoja Citas (mantiene encabezados).
+function resetCitas(data) {
+  const usuario = buscarUsuario(data.userEmail || '');
+  if (!usuario || usuario.rol !== 'admin') throw new Error('Solo el administrador puede resetear las citas');
+  const ss = SpreadsheetApp.openById(CONFIG.sheetId);
+  const sheet = ss.getSheetByName('Citas');
+  if (!sheet) return { ok: true, msg: 'No hay hoja Citas' };
+  const last = sheet.getLastRow();
+  if (last > 1) sheet.deleteRows(2, last - 1);
+  return { ok: true, msg: 'Citas reseteadas' };
 }
 
 // ── LEER HOJA GENÉRICA ───────────────────────────────────────
