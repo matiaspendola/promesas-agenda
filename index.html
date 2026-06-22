@@ -357,10 +357,10 @@ textarea.fc{resize:vertical;min-height:68px;}
         <button class="btn btn-primary" id="citas-new-btn" onclick="openModal()" style="display:none;">+ Agendar Cita</button>
       </div>
       <div class="filters">
-        <select class="fsel" id="f-estado"><option value="">Todos los estados</option><option>Confirmada</option><option>Pendiente</option><option>Suspendida</option><option>Completada</option></select>
-        <select class="fsel" id="f-disc"><option value="">Todos los profesionales</option><option>Kinesiología</option><option>Psicología</option><option>Nutrición</option><option>Médico</option><option>Prep. Física</option></select>
-        <select class="fsel" id="f-polo"><option value="">Todos los polos</option><option>Remo</option><option>Basketball</option><option>Judo</option><option>Natación</option><option>Atletismo</option><option>Gimnasia Rítmica</option><option>Vela</option></select>
-        <input type="text" class="fsel" placeholder="🔍 Buscar atleta..." style="min-width:160px;">
+        <select class="fsel" id="f-estado" onchange="renderCitas()"><option value="">Todos los estados</option><option>Confirmada</option><option>Pendiente</option><option>Suspendida</option><option>Completada</option></select>
+        <select class="fsel" id="f-disc" onchange="renderCitas()"><option value="">Todos los profesionales</option><option value="kine">Kinesiología</option><option value="psico">Psicología</option><option value="nutri">Nutrición</option><option value="medico">Médico</option><option value="profis">Prep. Física</option></select>
+        <select class="fsel" id="f-polo" onchange="renderCitas()"><option value="">Todos los polos</option><option>Remo</option><option>Basketball</option><option>Judo</option><option>Natación</option><option>Atletismo</option><option>Gimnasia Rítmica</option><option>Vela</option></select>
+        <input type="text" class="fsel" id="f-buscar-cita" placeholder="🔍 Buscar atleta..." style="min-width:160px;" oninput="renderCitas()">
       </div>
       <div class="card"><div style="overflow:hidden;border-radius:12px;">
         <table><thead><tr><th>Fecha/Hora</th><th>Atleta</th><th>Polo</th><th>Técnico</th><th>Profesional</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
@@ -1105,10 +1105,22 @@ function renderCitas() {
   const el={confirmada:'Confirmada',pendiente:'Pendiente',suspendida:'⏸ Suspendida',completada:'Completada'};
   let citas = CITAS_DATA;
   if(currentProfile==='entrenador') citas=citas.filter(c=>c.tec.toLowerCase().includes(currentUser.split(' ')[0].toLowerCase()));
+  // Filtros del gestor de citas
+  const fEstado=(document.getElementById('f-estado')?.value||'').toLowerCase();
+  const fDisc=document.getElementById('f-disc')?.value||'';
+  const fPolo=document.getElementById('f-polo')?.value||'';
+  const fBuscar=(document.getElementById('f-buscar-cita')?.value||'').toLowerCase().trim();
+  if(fEstado) citas=citas.filter(c=>c.estado===fEstado);
+  if(fDisc) citas=citas.filter(c=>c.prof===fDisc);
+  if(fPolo) citas=citas.filter(c=>(c.polo||'').toLowerCase().includes(fPolo.toLowerCase()));
+  if(fBuscar) citas=citas.filter(c=>(c.atleta||'').toLowerCase().includes(fBuscar)||(c.tec||'').toLowerCase().includes(fBuscar));
+  if(!CITAS_DATA.length){
+    body.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--gt);">Sin citas registradas aún</td></tr>`;
+    return;
+  }
   if(!citas.length){
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td colspan="8" style="text-align:center;padding:32px;color:var(--gt);">Sin citas registradas aún</td>`;
-    body.appendChild(tr); return;
+    body.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--gt);">Ninguna cita coincide con los filtros</td></tr>`;
+    return;
   }
   citas.forEach(c=>{
     const canSusp=(c.estado==='confirmada'||c.estado==='pendiente')&&(currentProfile==='profesional'||currentProfile==='admin_profesional'||currentProfile==='admin');
