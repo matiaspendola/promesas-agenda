@@ -244,6 +244,39 @@ textarea.fc{resize:vertical;min-height:68px;}
 .no-access{text-align:center;padding:60px 24px;color:var(--gt);}
 .no-access-icon{font-size:48px;margin-bottom:14px;}
 .no-access-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--texto);margin-bottom:6px;}
+
+/* LOADING OVERLAY */
+#app-loading{position:fixed;inset:0;background:rgba(245,246,250,.75);backdrop-filter:blur(2px);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+#app-loading.show{display:flex;}
+.spinner{width:38px;height:38px;border:4px solid var(--borde);border-top-color:var(--azul);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinner-txt{font-size:13px;font-weight:600;color:var(--azul);}
+
+/* RESPONSIVE (celular / tablet) */
+@media (max-width:860px){
+  .stats-grid{grid-template-columns:repeat(3,1fr);}
+  .grid-2{grid-template-columns:1fr;}
+  .prof-grid{grid-template-columns:repeat(3,1fr);}
+}
+@media (max-width:600px){
+  .topbar{height:auto;flex-wrap:wrap;padding:8px 14px;gap:6px;}
+  .tsub{display:none;}
+  .tnav{order:3;width:100%;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+  .nav-btn{white-space:nowrap;}
+  .main{padding:14px 12px;}
+  .page-hdr{flex-direction:column;gap:10px;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .prof-grid{grid-template-columns:repeat(2,1fr);}
+  .form-grid{grid-template-columns:1fr;}
+  .hgrid{grid-template-columns:repeat(3,1fr);}
+  /* Tablas con scroll horizontal */
+  .card table{min-width:560px;}
+  .card > div[style*="overflow:hidden"]{overflow-x:auto !important;}
+  .modal{max-width:100%;margin:8px;}
+  .role-chip{display:none;}
+  .wizard{flex-wrap:wrap;}
+  .wstep span{display:none;}
+}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -300,7 +333,7 @@ textarea.fc{resize:vertical;min-height:68px;}
     <!-- ===== DASHBOARD ===== -->
     <div id="view-dashboard" class="view">
       <div class="page-hdr">
-        <div><div class="page-title" id="dash-welcome">Dashboard</div><div class="page-sub">Viernes 12 de junio 2026 · IND Región de Los Ríos</div></div>
+        <div><div class="page-title" id="dash-welcome">Dashboard</div><div class="page-sub" id="dash-fecha">IND Región de Los Ríos</div></div>
         <div id="dash-action-btn"></div>
       </div>
       <div id="dash-alert" style="display:none;" class="alert warn">
@@ -371,7 +404,7 @@ textarea.fc{resize:vertical;min-height:68px;}
     <!-- ===== ATLETAS ===== -->
     <div id="view-atletas" class="view">
       <div class="page-hdr">
-        <div><div class="page-title">Listado de Atletas</div><div class="page-sub">102 deportistas vigentes · Los Ríos 2026 · Fuente: Anexo 2.5 mayo</div></div>
+        <div><div class="page-title">Listado de Atletas</div><div class="page-sub" id="atletas-sub">Deportistas vigentes · Los Ríos 2026</div></div>
         <div style="display:flex;gap:8px;">
           <select class="fsel" id="at-polo-f" onchange="renderAtletas()"><option value="">Todos los polos</option></select>
           <select class="fsel" id="at-ent-f" onchange="renderAtletas()"><option value="">Todos los técnicos</option></select>
@@ -389,7 +422,7 @@ textarea.fc{resize:vertical;min-height:68px;}
     <!-- ===== MÉTRICAS ===== -->
     <div id="view-metricas" class="view">
       <div class="page-hdr">
-        <div><div class="page-title">Métricas Mensuales</div><div class="page-sub">Solo visible para administradores</div></div>
+        <div><div class="page-title">Métricas Mensuales</div><div class="page-sub">Resumen de atenciones por mes · datos en vivo</div></div>
         <div style="display:flex;gap:8px;">
           <select class="fsel" id="m-mes" onchange="renderMetricas()"><option value="6">Junio 2026</option><option value="5">Mayo 2026</option><option value="4">Abril 2026</option><option value="3">Marzo 2026</option></select>
           <button class="btn btn-secondary">📥 Exportar PDF</button>
@@ -668,6 +701,7 @@ textarea.fc{resize:vertical;min-height:68px;}
 </div></div>
 
 <div class="toast" id="toast"><span id="t-icon">✅</span><span id="t-msg">OK</span></div>
+<div id="app-loading"><div class="spinner"></div><div class="spinner-txt" id="app-loading-txt">Cargando…</div></div>
 
 <script>
 // ==================== DATOS REALES ====================
@@ -949,6 +983,8 @@ function renderSlots(grid,d,prof,onPick){
   if(!anyFree)grid.insertAdjacentHTML('afterbegin',hmsg('Todos los horarios están ocupados en esta fecha.'));
 }
 function todayStr(){return new Date().toISOString().slice(0,10);}
+function showLoading(txt){document.getElementById('app-loading-txt').textContent=txt||'Cargando…';document.getElementById('app-loading').classList.add('show');}
+function hideLoading(){document.getElementById('app-loading').classList.remove('show');}
 
 // ===== DATA (cargada desde GAS) =====
 let TODAY_CITAS = [];
@@ -975,6 +1011,7 @@ function citaToLocal(c) {
 }
 
 async function loadCitas() {
+  showLoading('Cargando citas…');
   try {
     const body = { tipo: 'get_citas' };
     if (currentProfKey) body.profKey = currentProfKey;
@@ -982,17 +1019,23 @@ async function loadCitas() {
     const data = await res.json();
     if (!data.ok) return;
     const all = (data.citas || []).map(citaToLocal);
+    // Ordenar por fecha+hora descendente (próximas/recientes primero)
+    all.sort((a,b) => ((b.fecha||'')+(b.hora||'')).localeCompare((a.fecha||'')+(a.hora||'')));
     CITAS_DATA = all;
     const hoy = todayStr();
-    TODAY_CITAS = all.filter(c => c.fecha === hoy).map(c => ({ eventoId: c.eventoId, hora: c.hora, atleta: c.atleta, polo: c.polo, tec: c.tec, prof: c.prof, profNom: c.profNom, estado: c.estado }));
+    TODAY_CITAS = all.filter(c => c.fecha === hoy).sort((a,b)=>(a.hora||'').localeCompare(b.hora||'')).map(c => ({ eventoId: c.eventoId, hora: c.hora, atleta: c.atleta, polo: c.polo, tec: c.tec, prof: c.prof, profNom: c.profNom, estado: c.estado }));
     CAL_EVENTS = all.map(c => ({ d: c.d, m: c.m, y: c.y, hora: c.hora, atleta: c.atleta.split(' ').slice(0,2).join(' '), prof: c.prof, estado: c.estado }));
   } catch(e) { console.warn('loadCitas error', e); }
+  finally { hideLoading(); }
 }
 
 // ===== DASHBOARD =====
 function setupDashboard() {
   const p = PERFILES[currentProfile];
   document.getElementById('dash-welcome').textContent = 'Bienvenido/a, ' + currentUser + ' 👋';
+  const f = new Date();
+  const fechaTxt = f.toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('dash-fecha').textContent = fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1) + ' · IND Región de Los Ríos';
   // stats
   const stats = document.getElementById('dash-stats');
   const profs = [{key:'kine',lbl:'Kinesiología',ico:'🦴'},{key:'psico',lbl:'Psicología',ico:'🧠'},{key:'nutri',lbl:'Nutrición',ico:'🥗'},{key:'medico',lbl:'Médico',ico:'🩺'},{key:'profis',lbl:'Prep. Física',ico:'💪'}];
@@ -1101,8 +1144,8 @@ function setupCitas() {
 }
 function renderCitas() {
   const body=document.getElementById('citas-body'); body.innerHTML='';
-  const eb={confirmada:'b-conf',pendiente:'b-pend',suspendida:'b-susp',completada:'b-comp'};
-  const el={confirmada:'Confirmada',pendiente:'Pendiente',suspendida:'⏸ Suspendida',completada:'Completada'};
+  const eb={confirmada:'b-conf',pendiente:'b-pend',suspendida:'b-susp',completada:'b-comp','no asistió':'b-susp'};
+  const el={confirmada:'Confirmada',pendiente:'Pendiente',suspendida:'⏸ Suspendida',completada:'✓ Completada','no asistió':'✗ No asistió'};
   let citas = CITAS_DATA;
   if(currentProfile==='entrenador') citas=citas.filter(c=>c.tec.toLowerCase().includes(currentUser.split(' ')[0].toLowerCase()));
   // Filtros del gestor de citas
@@ -1122,25 +1165,48 @@ function renderCitas() {
     body.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--gt);">Ninguna cita coincide con los filtros</td></tr>`;
     return;
   }
+  const puedeGestionar=(currentProfile==='profesional'||currentProfile==='admin_profesional'||currentProfile==='admin');
   citas.forEach(c=>{
-    const canSusp=(c.estado==='confirmada'||c.estado==='pendiente')&&(currentProfile==='profesional'||currentProfile==='admin_profesional'||currentProfile==='admin');
+    const activa=(c.estado==='confirmada'||c.estado==='pendiente');
+    const canSusp=activa&&puedeGestionar;
+    const canCerrar=activa&&puedeGestionar;
     const canReag=(c.estado==='suspendida')&&(currentProfile==='admin'||currentProfile==='admin_profesional');
+    const tachado=(c.estado==='suspendida'||c.estado==='no asistió');
     const tr=document.createElement('tr');
     tr.innerHTML=`
-      <td style="font-weight:700;color:${c.estado==='suspendida'?'var(--rojo)':'var(--azul)'};${c.estado==='suspendida'?'text-decoration:line-through;':''}">${c.fechaDisplay}</td>
+      <td style="font-weight:700;color:${tachado?'var(--rojo)':'var(--azul)'};${tachado?'text-decoration:line-through;':''}">${c.fechaDisplay}</td>
       <td><b>${c.atleta}</b></td>
       <td style="font-size:11px;">${c.polo}</td>
       <td style="font-size:11px;color:var(--gt);">${c.tec}</td>
       <td><span class="badge b-${c.prof}">${c.profNom}</span></td>
       <td style="font-size:11px;color:var(--gt);max-width:120px;">${c.motivo}</td>
-      <td><span class="badge ${eb[c.estado]}">${el[c.estado]}</span></td>
+      <td><span class="badge ${eb[c.estado]||'b-pend'}">${el[c.estado]||c.estado}</span></td>
       <td style="display:flex;gap:4px;flex-wrap:wrap;">
-        <button class="btn btn-ghost btn-sm">Ver</button>
+        ${canCerrar?`<button class="btn btn-verde btn-sm" onclick="marcarCita('${c.eventoId||''}','Completada')">✓ Asistió</button>`:''}
+        ${canCerrar?`<button class="btn btn-danger btn-sm" onclick="marcarCita('${c.eventoId||''}','No asistió')">✗ No asistió</button>`:''}
         ${canSusp?`<button class="btn btn-warn btn-sm" onclick="openSusp('${c.eventoId||''}')">⏸ Suspender</button>`:''}
         ${canReag?`<button class="btn btn-verde btn-sm" onclick="openReagendar('${c.eventoId||''}')">📅 Reagendar</button>`:''}
       </td>`;
     body.appendChild(tr);
   });
+}
+
+async function marcarCita(eventoId, estado){
+  if(!eventoId){showToast('Cita inválida','err');return;}
+  if(!currentEmail){showToast('No hay sesión activa','err');return;}
+  showLoading('Actualizando…');
+  try{
+    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({tipo:'completar_cita',userEmail:currentEmail,eventoId,estado})});
+    const data=await res.json();
+    if(data.ok){
+      showToast(estado==='Completada'?'✓ Cita marcada como realizada':'Cita marcada como no asistida');
+      await loadCitas();
+      refreshCurrentView();
+    }else{
+      showToast('❌ '+(data.error||'Error al actualizar'),'err');
+    }
+  }catch(e){showToast('❌ Error de conexión','err');}
+  finally{hideLoading();}
 }
 
 // ===== ATLETAS =====
@@ -1176,6 +1242,8 @@ function renderAtletas() {
   });
   const countEl=document.getElementById('atletas-count');
   if(countEl) countEl.textContent=`Mostrando ${count} de ${total} atletas vigentes`;
+  const subEl=document.getElementById('atletas-sub');
+  if(subEl) subEl.textContent=`${total} deportistas vigentes · Los Ríos 2026`;
 }
 
 // ===== MÉTRICAS =====

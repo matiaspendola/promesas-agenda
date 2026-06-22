@@ -73,6 +73,7 @@ function doPost(e) {
       if (data.tipo === 'reagendar_cita' && usuario.rol !== 'admin') return err('Solo el administrador puede reagendar');
       if (data.tipo === 'suspender_cita' && usuario.rol === 'tecnico') return err('Los técnicos no pueden suspender citas');
       if (data.tipo === 'guardar_disponibilidad' && usuario.rol === 'tecnico') return err('Los técnicos no pueden modificar disponibilidad');
+      if (data.tipo === 'completar_cita' && usuario.rol === 'tecnico') return err('Los técnicos no pueden cerrar citas');
     }
 
     switch (data.tipo) {
@@ -86,6 +87,7 @@ function doPost(e) {
       case 'leer_hoja':           return ok(leerHoja(data));
       case 'validar_usuario':     return ok(validarUsuario(data));
       case 'get_citas':           return ok(getCitas(data));
+      case 'completar_cita':      return ok(completarCita(data));
       case 'reset_citas':         return ok(resetCitas(data));
       default: return err('Tipo desconocido: ' + data.tipo);
     }
@@ -437,6 +439,14 @@ function actualizarEstadoSheet(eventoId, nuevoEstado, motivo) {
       break;
     }
   }
+}
+
+// ── CERRAR CITA (marcar asistencia) ──────────────────────────
+// data: { userEmail, eventoId, estado: 'Completada' | 'No asistió' }
+function completarCita(data) {
+  const estado = data.estado === 'No asistió' ? 'No asistió' : 'Completada';
+  actualizarEstadoSheet(data.eventoId, estado, '');
+  return { ok: true, msg: 'Cita marcada como ' + estado };
 }
 
 // ── PLANTILLAS DE EMAIL ───────────────────────────────────────
