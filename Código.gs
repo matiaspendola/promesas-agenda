@@ -13,32 +13,38 @@
 // ============================================================
 
 // ── CONFIGURACIÓN ────────────────────────────────────────────
+// IMPORTANTE (modelo de calendarios):
+//   El evento se crea en el calendario del profesional. Para que funcione,
+//   cada profesional debe COMPARTIR su Google Calendar con la cuenta que
+//   ejecuta este script (la cuenta del sistema), con permiso
+//   "Hacer cambios en los eventos". El calendarId es su propio email.
+//   Si se deja calendarId vacío, se usa el email del profesional.
 const CONFIG = {
   profesionales: {
     kine: {
       nombre: 'Kin. Katalina Camino',
-      email:  'kine.catalinacamino@gmail.com',   // ← reemplazar
-      calendarId: 'primary',                  // ← o ID de su calendario
+      email:  'kine.catalinacamino@gmail.com',   // ← email real del profesional
+      calendarId: '',                            // ← vacío = usa su email como calendario
     },
     psico: {
       nombre: 'Ps. Mario Pidal',
-      email:  'pidalmario@gmail.com',        // ← reemplazar
-      calendarId: 'primary',
+      email:  'pidalmario@gmail.com',        // ← email real
+      calendarId: '',
     },
     nutri: {
       nombre: 'Nut. Josefina Enríquez',
-      email:  'josefina.enri.sch@gmail.com', // ← reemplazar
-      calendarId: 'primary',
+      email:  'josefina.enri.sch@gmail.com', // ← email real
+      calendarId: '',
     },
     medico: {
       nombre: 'Dr. Juan Manuel Guzmán',
-      email:  'jm.guzman@gmail.com',          // ← reemplazar
-      calendarId: 'primary',
+      email:  'jm.guzman@gmail.com',          // ← email real
+      calendarId: '',
     },
     profis: {
       nombre: 'Prof. Matías Péndola',
-      email:  'matias.pendola@gmail.com',     // ← reemplazar
-      calendarId: 'primary',
+      email:  'matias.pendola@gmail.com',     // ← email real
+      calendarId: '',
     },
   },
   // Crear Google Sheets en drive.google.com
@@ -50,6 +56,12 @@ const CONFIG = {
 
   // Nombre que aparece en los emails enviados
   nombrePrograma: 'Promesas Chile · CAR Náutico Valdivia · IND Los Ríos',
+
+  // Remitente de los correos. Dejar VACÍO para enviar desde la cuenta que
+  // ejecuta el script (recomendado tras migrar a la cuenta del sistema).
+  // Si se ejecuta bajo una cuenta personal y se quiere usar un alias verificado
+  // ("Enviar como" en Gmail), poner aquí esa dirección.
+  remitente: '',
 
   // Ubicación que aparece en los eventos de Calendar
   lugar: 'CAR Náutico Valdivia, Valdivia, Los Ríos',
@@ -89,6 +101,7 @@ function doPost(e) {
       case 'get_citas':           return ok(getCitas(data));
       case 'completar_cita':      return ok(completarCita(data));
       case 'reset_citas':         return ok(resetCitas(data));
+      case 'verificar_calendarios': return ok(verificarCalendarios(data));
       default: return err('Tipo desconocido: ' + data.tipo);
     }
   } catch (e) {
@@ -135,9 +148,8 @@ function agendarCita(data) {
 
   const ss = SpreadsheetApp.openById(CONFIG.sheetId);
 
-  // 1. Crear evento en Google Calendar del profesional
-  const cal = CalendarApp.getCalendarById(prof.calendarId)
-           || CalendarApp.getDefaultCalendar();
+  // 1. Crear evento en el Google Calendar del profesional (su email)
+  const cal = _calendarioDe(prof);
 
   const titulo = `[Promesas Chile] ${data.atletaNombre} — ${data.profesionalLabel}`;
   const descripcion = [
@@ -159,19 +171,17 @@ function agendarCita(data) {
   });
 
   // 2. Email al técnico (solo aviso de solicitud registrada)
-  GmailApp.sendEmail(
+  if (data.tecnicoEmail) enviarCorreo(
     data.tecnicoEmail,
     `[Promesas Chile] Solicitud de hora registrada — ${data.atletaNombre}`,
-    stripHtml(emailTecnicoHtml(data, prof)),
-    { htmlBody: emailTecnicoHtml(data, prof), name: CONFIG.nombrePrograma }
+    emailTecnicoHtml(data, prof)
   );
 
   // 3. Email al apoderado (confirmación completa)
-  GmailApp.sendEmail(
+  if (data.apoderadoEmail) enviarCorreo(
     data.apoderadoEmail,
     `[Promesas Chile] Confirmación de cita para ${data.atletaNombre}`,
-    stripHtml(emailApoderadoHtml(data, prof, fin)),
-    { htmlBody: emailApoderadoHtml(data, prof, fin), name: CONFIG.nombrePrograma }
+    emailApoderadoHtml(data, prof, fin)
   );
 
   // 4. Registrar en Google Sheets
@@ -193,8 +203,7 @@ function suspenderCita(data) {
     try {
       const prof = CONFIG.profesionales[data.profesionalKey];
       if (prof) {
-        const cal = CalendarApp.getCalendarById(prof.calendarId)
-                 || CalendarApp.getDefaultCalendar();
+        const cal = _calendarioDe(prof);
         const evento = cal.getEventById(data.eventoId);
         if (evento) evento.deleteEvent();
       }
@@ -202,19 +211,17 @@ function suspenderCita(data) {
   }
 
   // 2. Email al técnico — aviso de suspensión
-  GmailApp.sendEmail(
+  if (data.tecnicoEmail) enviarCorreo(
     data.tecnicoEmail,
-    `[Promesas Chile] ⚠️ Cita suspendida — ${data.atletaNombre}`,
-    '',
-    { htmlBody: emailSuspensionTecnicoHtml(data), name: CONFIG.nombrePrograma }
+    `[Promesas Chile] Cita suspendida — ${data.atletaNombre}`,
+    emailSuspensionTecnicoHtml(data)
   );
 
   // 3. Email al apoderado — notificación con disculpas
-  GmailApp.sendEmail(
+  if (data.apoderadoEmail) enviarCorreo(
     data.apoderadoEmail,
     `[Promesas Chile] Aviso de suspensión — ${data.atletaNombre}`,
-    '',
-    { htmlBody: emailSuspensionApoderadoHtml(data), name: CONFIG.nombrePrograma }
+    emailSuspensionApoderadoHtml(data)
   );
 
   // 4. Actualizar estado en Google Sheets
@@ -230,8 +237,7 @@ function reagendarCita(data) {
     try {
       const prof = CONFIG.profesionales[data.profesionalKey];
       if (prof) {
-        const cal = CalendarApp.getCalendarById(prof.calendarId)
-                 || CalendarApp.getDefaultCalendar();
+        const cal = _calendarioDe(prof);
         const evento = cal.getEventById(data.eventoId);
         if (evento) evento.deleteEvent();
       }
@@ -531,6 +537,49 @@ function emailSuspensionApoderadoHtml(data) {
 // ── HELPERS ───────────────────────────────────────────────────
 function stripHtml(html) {
   return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+// Devuelve el calendario del profesional (su email). Si no está accesible
+// —porque aún no compartió su calendario con la cuenta del sistema—, cae al
+// calendario por defecto para no bloquear el agendamiento.
+function _calendarioDe(prof) {
+  const id = prof.calendarId || prof.email;
+  if (id) {
+    try {
+      const cal = CalendarApp.getCalendarById(id);
+      if (cal) return cal;
+    } catch (e) { /* sin acceso al calendario */ }
+  }
+  return CalendarApp.getDefaultCalendar();
+}
+
+// Envío centralizado de correos. Usa el remitente configurado (alias) si existe;
+// si no, envía desde la cuenta que ejecuta el script.
+function enviarCorreo(to, subject, htmlBody) {
+  const opts = { htmlBody: htmlBody, name: CONFIG.nombrePrograma };
+  if (CONFIG.remitente) opts.from = CONFIG.remitente;
+  GmailApp.sendEmail(to, subject, stripHtml(htmlBody), opts);
+}
+
+// Diagnóstico: indica, por profesional, si la cuenta del sistema puede
+// escribir en su calendario. Úsalo para verificar que compartieron bien.
+function verificarCalendarios(data) {
+  const usuario = buscarUsuario(data.userEmail || '');
+  if (!usuario || usuario.rol !== 'admin') throw new Error('Solo el administrador puede verificar calendarios');
+  let ejecutaComo = '';
+  try { ejecutaComo = Session.getEffectiveUser().getEmail(); } catch (e) { ejecutaComo = '(no disponible)'; }
+  const resultado = {};
+  Object.keys(CONFIG.profesionales).forEach(key => {
+    const prof = CONFIG.profesionales[key];
+    const id = prof.calendarId || prof.email;
+    let estado;
+    try {
+      const cal = CalendarApp.getCalendarById(id);
+      estado = cal ? 'OK (accesible)' : 'SIN ACCESO (no compartido con el sistema)';
+    } catch (e) { estado = 'ERROR: ' + e.message; }
+    resultado[key] = { calendario: id, estado: estado };
+  });
+  return { ok: true, ejecutaComo: ejecutaComo, calendarios: resultado };
 }
 
 // ── VALIDACIÓN DE USUARIO DESDE SHEETS ───────────────────────
