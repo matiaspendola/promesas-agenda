@@ -23,7 +23,7 @@ const CONFIG = {
   profesionales: {
     kine: {
       nombre: 'Kin. Katalina Camino',
-      email:  'kine.catalinacamino@gmail.com',   // ← email real del profesional
+      email:  'kine.katalinacamino@gmail.com',   // ← email real (fuente: hoja Usuarios)
       calendarId: '',                            // ← vacío = usa su email como calendario
     },
     psico: {
@@ -123,7 +123,7 @@ function doGet(e) {
 
 // ── AGENDAR CITA ─────────────────────────────────────────────
 function agendarCita(data) {
-  const prof = CONFIG.profesionales[data.profesionalKey];
+  const prof = getProfesional(data.profesionalKey);
   if (!prof) throw new Error('Profesional no encontrado: ' + data.profesionalKey);
 
   const inicio = new Date(data.fechaHoraInicio);
@@ -201,7 +201,7 @@ function suspenderCita(data) {
   // 1. Eliminar evento del calendario
   if (data.eventoId) {
     try {
-      const prof = CONFIG.profesionales[data.profesionalKey];
+      const prof = getProfesional(data.profesionalKey);
       if (prof) {
         const cal = _calendarioDe(prof);
         const evento = cal.getEventById(data.eventoId);
@@ -235,7 +235,7 @@ function reagendarCita(data) {
   // Suspende la antigua sin notificar de nuevo (ya se notificó)
   if (data.eventoId) {
     try {
-      const prof = CONFIG.profesionales[data.profesionalKey];
+      const prof = getProfesional(data.profesionalKey);
       if (prof) {
         const cal = _calendarioDe(prof);
         const evento = cal.getEventById(data.eventoId);
@@ -570,14 +570,17 @@ function verificarCalendarios(data) {
   try { ejecutaComo = Session.getEffectiveUser().getEmail(); } catch (e) { ejecutaComo = '(no disponible)'; }
   const resultado = {};
   Object.keys(CONFIG.profesionales).forEach(key => {
-    const prof = CONFIG.profesionales[key];
-    const id = prof.calendarId || prof.email;
+    const prof = getProfesional(key) || {};
+    const id = prof.calendarId || prof.email || '';
     let estado;
-    try {
-      const cal = CalendarApp.getCalendarById(id);
-      estado = cal ? 'OK (accesible)' : 'SIN ACCESO (no compartido con el sistema)';
-    } catch (e) { estado = 'ERROR: ' + e.message; }
-    resultado[key] = { calendario: id, estado: estado };
+    if (!id) { estado = 'SIN EMAIL en la hoja Usuarios'; }
+    else {
+      try {
+        const cal = CalendarApp.getCalendarById(id);
+        estado = cal ? 'OK (accesible)' : 'SIN ACCESO (no compartido con el sistema)';
+      } catch (e) { estado = 'ERROR: ' + e.message; }
+    }
+    resultado[key] = { calendario: id || '(vacío)', estado: estado };
   });
   return { ok: true, ejecutaComo: ejecutaComo, calendarios: resultado };
 }
@@ -603,6 +606,27 @@ function validarUsuario(data) {
 function buscarUsuario(email) {
   const todos = buscarTodosUsuarios(email);
   return todos.length ? todos[0] : null;
+}
+
+// Datos del profesional por su key (kine/psico/nutri/medico/profis).
+// Fuente de verdad: hoja Usuarios (rol=profesional). Cae a CONFIG si no está.
+function getProfesional(key) {
+  try {
+    const ss = SpreadsheetApp.openById(CONFIG.sheetId);
+    const sheet = ss.getSheetByName('Usuarios');
+    if (sheet) {
+      const rows = sheet.getDataRange().getValues();
+      for (let i = 1; i < rows.length; i++) {
+        const [rol, nombre, correo, k] = rows[i];
+        if (rol === 'profesional' && String(k).trim() === key) {
+          const email = String(correo || '').trim();
+          const base = CONFIG.profesionales[key] || {};
+          return { nombre: nombre || base.nombre || key, email: email, calendarId: base.calendarId || email };
+        }
+      }
+    }
+  } catch (e) { /* usar fallback */ }
+  return CONFIG.profesionales[key] || null;
 }
 
 function buscarTodosUsuarios(email) {
