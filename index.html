@@ -512,7 +512,7 @@ textarea.fc{resize:vertical;min-height:68px;}
               <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px;">
                 <div style="font-size:12px;"><span class="badge badge-kine">🦴 Kine</span> Kin. Catalina Camino → <input type="email" class="form-control" placeholder="catalina.camino@gmail.com" id="email-kine" style="width:220px;display:inline-block;padding:4px 8px;font-size:11px;"></div>
                 <div style="font-size:12px;margin-top:4px;"><span class="badge badge-psico">🧠 Psico</span> Ps. Mario Pidal → <input type="email" class="form-control" placeholder="mario.pidal@gmail.com" id="email-psico" style="width:220px;display:inline-block;padding:4px 8px;font-size:11px;"></div>
-                <div style="font-size:12px;margin-top:4px;"><span class="badge badge-nutri">🥗 Nutri</span> Nut. Josefina Henríquez → <input type="email" class="form-control" placeholder="josefina.henriquez@gmail.com" id="email-nutri" style="width:220px;display:inline-block;padding:4px 8px;font-size:11px;"></div>
+                <div style="font-size:12px;margin-top:4px;"><span class="badge badge-nutri">🥗 Nutri</span> Nut. Josefina Enríquez → <input type="email" class="form-control" placeholder="josefina.henriquez@gmail.com" id="email-nutri" style="width:220px;display:inline-block;padding:4px 8px;font-size:11px;"></div>
                 <div style="font-size:12px;margin-top:4px;"><span class="badge badge-medico">🩺 Médico</span> Dr. Juan Manuel Guzmán → <input type="email" class="form-control" placeholder="jm.guzman@gmail.com" id="email-medico" style="width:220px;display:inline-block;padding:4px 8px;font-size:11px;"></div>
                 <div style="font-size:12px;margin-top:4px;"><span class="badge badge-profis">💪 Prep.F</span> Prof. Matías Péndola → <input type="email" class="form-control" placeholder="matias.pendola@gmail.com" id="email-profis" style="width:220px;display:inline-block;padding:4px 8px;font-size:11px;"></div>
               </div>
@@ -569,7 +569,7 @@ textarea.fc{resize:vertical;min-height:68px;}
       <div class="prof-grid">
         <div class="ppill kine" onclick="selProf('kine','🦴 Kinesiología','Kin. Catalina Camino',this)"><div class="em">🦴</div><div class="pn">Kinesiología</div><div class="ps">Kin. C. Camino</div></div>
         <div class="ppill psico" onclick="selProf('psico','🧠 Psicología','Ps. Mario Pidal',this)"><div class="em">🧠</div><div class="pn">Psicología</div><div class="ps">Ps. M. Pidal</div></div>
-        <div class="ppill nutri" onclick="selProf('nutri','🥗 Nutrición','Nut. Josefina Henríquez',this)"><div class="em">🥗</div><div class="pn">Nutrición</div><div class="ps">Nut. J. Henríquez</div></div>
+        <div class="ppill nutri" onclick="selProf('nutri','🥗 Nutrición','Nut. Josefina Enríquez',this)"><div class="em">🥗</div><div class="pn">Nutrición</div><div class="ps">Nut. J. Henríquez</div></div>
         <div class="ppill medico" onclick="selProf('medico','🩺 Médico','Dr. Juan Manuel Guzmán',this)"><div class="em">🩺</div><div class="pn">Médico</div><div class="ps">Dr. J.M. Guzmán</div></div>
         <div class="ppill profis" onclick="selProf('profis','💪 Prep. Física','Prof. Matías Péndola',this)"><div class="em">💪</div><div class="pn">Prep. Física</div><div class="ps">Prof. M. Péndola</div></div>
       </div>
@@ -1257,7 +1257,7 @@ function renderAtletas() {
 
 // ===== MÉTRICAS =====
 // Métricas calculadas en vivo desde las citas reales (CITAS_DATA)
-const PROF_NOMBRES={kine:'Kin. Catalina Camino',psico:'Ps. Mario Pidal',nutri:'Nut. Josefina Henríquez',medico:'Dr. Juan Manuel Guzmán',profis:'Prof. Matías Péndola'};
+const PROF_NOMBRES={kine:'Kin. Catalina Camino',psico:'Ps. Mario Pidal',nutri:'Nut. Josefina Enríquez',medico:'Dr. Juan Manuel Guzmán',profis:'Prof. Matías Péndola'};
 const POLO_KEY={'Remo':'remo','Basketball':'basket','Judo':'judo','Natación':'natacion','Atletismo':'atletismo'};
 function renderMetricas(){
   const mes=parseInt(document.getElementById('m-mes').value); // 1-12
