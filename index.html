@@ -795,7 +795,7 @@ async function handleGoogleCredential(response) {
     // Se envía el id_token completo: el backend lo verifica contra Google.
     const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ tipo: 'validar_usuario', idToken: response.credential }) });
     const data = await res.json();
-    if (!data.autorizado) { showLoginError('Tu cuenta (' + email + ') no está autorizada en este sistema.'); return; }
+    if (!data.autorizado) { showLoginError(data.error || ('Tu cuenta (' + email + ') no está autorizada en este sistema.')); return; }
     aplicarSesion(data.email || email, data);
   } catch(e) {
     showLoginError('Error conectando con el servidor. Intenta de nuevo.');
