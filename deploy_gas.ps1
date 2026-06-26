@@ -64,8 +64,8 @@ $newVer = $verResp.versionNumber
 Write-Host "Version creada: $newVer"
 
 # --- 4. Listar deployments y actualizar el web app ---
-# Deployment que usa el frontend (URL hardcodeada en index.html)
-$depId = "AKfycbwlJNIyTNbxKwpGGyfqIUPYsjCz2QiHUijtJFsAwGTV612SS9cDKW3pGlESHAo2hpUs7A"
+# Deployment de la cuenta del sistema (promesaschilelosrios) que usa el frontend
+$depId = "AKfycbwIr6B4cBRFHtmXkOmnQEXge8S_0arXJ8SR0GN0VOLTnYEDFMrnpAYCFl1ESbYfRV77sw"
 Write-Host "Deployment a actualizar: $depId"
 
 $updBody = @{

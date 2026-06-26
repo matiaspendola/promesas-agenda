@@ -557,8 +557,8 @@ function _calendarioDe(prof) {
 // si no, envía desde la cuenta que ejecuta el script.
 function enviarCorreo(to, subject, htmlBody) {
   const opts = { htmlBody: htmlBody, name: CONFIG.nombrePrograma };
-  if (CONFIG.remitente) opts.from = CONFIG.remitente;
-  GmailApp.sendEmail(to, subject, stripHtml(htmlBody), opts);
+  if (CONFIG.remitente) opts.from = CONFIG.remitente; // alias verificado opcional
+  MailApp.sendEmail(to, subject, stripHtml(htmlBody), opts);
 }
 
 // Diagnóstico: indica, por profesional, si la cuenta del sistema puede
