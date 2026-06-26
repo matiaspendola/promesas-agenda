@@ -44,7 +44,7 @@ const CONFIG = {
     profis: {
       nombre: 'Prof. Matías Péndola',
       email:  'matias.pendola@gmail.com',     // ← email real
-      calendarId: '',
+      calendarId: '3a79537bf1bafcc39e1a21feed51e2946785ee960f6e4f4abda4dd7b22ca552a@group.calendar.google.com', // Calendario "Promesas Chile PF"
     },
   },
   // Crear Google Sheets en drive.google.com
@@ -556,9 +556,16 @@ function _calendarioDe(prof) {
 // Envío centralizado de correos. Usa el remitente configurado (alias) si existe;
 // si no, envía desde la cuenta que ejecuta el script.
 function enviarCorreo(to, subject, htmlBody) {
-  const opts = { htmlBody: htmlBody, name: CONFIG.nombrePrograma };
-  if (CONFIG.remitente) opts.from = CONFIG.remitente; // alias verificado opcional
-  MailApp.sendEmail(to, subject, stripHtml(htmlBody), opts);
+  try {
+    const opts = { htmlBody: htmlBody, name: CONFIG.nombrePrograma };
+    if (CONFIG.remitente) opts.from = CONFIG.remitente; // alias verificado opcional
+    MailApp.sendEmail(to, subject, stripHtml(htmlBody), opts);
+    return true;
+  } catch (e) {
+    // No abortar la operación si falla el correo (p.ej. permiso no autorizado aún)
+    console.warn('No se pudo enviar correo a ' + to + ': ' + e);
+    return false;
+  }
 }
 
 // Diagnóstico: indica, por profesional, si la cuenta del sistema puede
