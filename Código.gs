@@ -285,6 +285,16 @@ function agendarCita(data) {
     emailApoderadoHtml(data, prof, fin)
   );
 
+  // 4. Email al profesional si quien agenda es otra persona (admin u otro profesional)
+  const quienAgenda = String(data._email || '').toLowerCase();
+  if (prof.email && quienAgenda !== prof.email.toLowerCase()) {
+    enviarCorreo(
+      prof.email,
+      `[Promesas Chile] Nueva cita agendada en tu calendario — ${data.atletaNombre}`,
+      emailProfesionalHtml(data, prof, fin, quienAgenda)
+    );
+  }
+
   // 4. Registrar en Google Sheets
   const eventoId = evento.getId();
   registrarEnSheet({
@@ -311,6 +321,8 @@ function suspenderCita(data) {
     } catch (e) { /* evento ya no existe */ }
   }
 
+  const profSusp = getProfesional(data.profesionalKey);
+
   // 2. Email al técnico — aviso de suspensión
   if (data.tecnicoEmail) enviarCorreo(
     data.tecnicoEmail,
@@ -325,7 +337,17 @@ function suspenderCita(data) {
     emailSuspensionApoderadoHtml(data)
   );
 
-  // 4. Actualizar estado en Google Sheets
+  // 4. Email al profesional si quien suspende es otra persona
+  const quienSuspende = String(data._email || '').toLowerCase();
+  if (profSusp && profSusp.email && quienSuspende !== profSusp.email.toLowerCase()) {
+    enviarCorreo(
+      profSusp.email,
+      `[Promesas Chile] Cita cancelada en tu calendario — ${data.atletaNombre}`,
+      emailSuspensionProfesionalHtml(data, profSusp, quienSuspende)
+    );
+  }
+
+  // 5. Actualizar estado en Google Sheets
   actualizarEstadoSheet(data.eventoId, 'Suspendida', data.motivoSuspension);
 
   return { ok: true, msg: 'Cita suspendida y notificaciones enviadas' };
@@ -603,6 +625,32 @@ function emailApoderadoHtml(data, prof, fin) {
 </div>`;
 }
 
+function emailProfesionalHtml(data, prof, fin, quienAgenda) {
+  const fechaStr = data.fechaHoraInicio.split('T')[0];
+  const horaStr  = (data.fechaHoraInicio.split('T')[1] || '').slice(0, 5);
+  const horaFin  = fin.toTimeString().slice(0, 5);
+  return `
+<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
+  <div style="background:#003087;padding:16px 20px;border-radius:8px 8px 0 0;">
+    <h2 style="color:white;margin:0;font-size:16px;">• Nueva cita en tu calendario — Promesas Chile</h2>
+  </div>
+  <div style="padding:20px;border:1px solid #E2E6EF;border-top:none;border-radius:0 0 8px 8px;background:#fff;">
+    <p>Hola <b>${prof.nombre}</b>,</p>
+    <p style="margin-top:10px;">Se ha agendado una nueva cita en tu calendario desde la cuenta <b>${quienAgenda}</b>.</p>
+    <div style="background:#F0F4FF;border-radius:8px;padding:14px;margin:14px 0;border-left:4px solid #003087;">
+      <p><b>• Atleta:</b> ${data.atletaNombre} &nbsp;·&nbsp; ${data.polo}</p>
+      <p><b>• Fecha:</b> ${fechaStr}</p>
+      <p><b>• Hora:</b> ${horaStr} a ${horaFin}</p>
+      <p><b>• Lugar:</b> ${CONFIG.lugar}</p>
+      <p><b>• Motivo:</b> ${data.motivo || 'Sin especificar'}</p>
+      ${data.tecnicoNombre ? `<p><b>• Técnico:</b> ${data.tecnicoNombre}</p>` : ''}
+    </div>
+    <p style="color:#6B7280;font-size:12px;">Este evento ya fue agregado a tu Google Calendar. Si tienes algún inconveniente con el horario, contacta al administrador.</p>
+    <p style="margin-top:16px;">Saludos,<br><b>${CONFIG.nombrePrograma}</b></p>
+  </div>
+</div>`;
+}
+
 function emailSuspensionTecnicoHtml(data) {
   return `
 <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
@@ -631,6 +679,28 @@ function emailSuspensionApoderadoHtml(data) {
     <p style="margin-top:8px;"><b>Motivo:</b> ${data.motivoSuspension || 'No especificado'}</p>
     <p style="margin-top:10px;">Nos pondremos en contacto a la brevedad para coordinar un nuevo horario. Disculpe los inconvenientes ocasionados.</p>
     <p style="margin-top:16px;">Saludos cordiales,<br><b>${CONFIG.nombrePrograma}</b></p>
+  </div>
+</div>`;
+}
+
+function emailSuspensionProfesionalHtml(data, prof, quienSuspende) {
+  const fechaStr = String(data.fechaHoraInicio || '').split('T')[0];
+  const horaStr  = (String(data.fechaHoraInicio || '').split('T')[1] || '').slice(0, 5);
+  return `
+<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
+  <div style="background:#C8102E;padding:16px 20px;border-radius:8px 8px 0 0;">
+    <h2 style="color:white;margin:0;font-size:16px;">• Cita cancelada en tu calendario — Promesas Chile</h2>
+  </div>
+  <div style="padding:20px;border:1px solid #FECACA;border-top:none;border-radius:0 0 8px 8px;background:#FEF2F2;">
+    <p>Hola <b>${prof.nombre}</b>,</p>
+    <p style="margin-top:10px;">La siguiente cita fue <b>cancelada</b> desde la cuenta <b>${quienSuspende}</b>:</p>
+    <div style="background:#fff;border-radius:8px;padding:14px;margin:14px 0;border-left:4px solid #C8102E;">
+      <p><b>• Atleta:</b> ${data.atletaNombre}</p>
+      <p><b>• Fecha:</b> ${fechaStr} &nbsp;·&nbsp; ${horaStr}</p>
+      <p><b>• Motivo de cancelacion:</b> ${data.motivoSuspension || 'No especificado'}</p>
+    </div>
+    <p style="color:#6B7280;font-size:12px;">El evento fue eliminado de tu Google Calendar.</p>
+    <p style="margin-top:16px;">Saludos,<br><b>${CONFIG.nombrePrograma}</b></p>
   </div>
 </div>`;
 }
