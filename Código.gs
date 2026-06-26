@@ -23,8 +23,8 @@ const CONFIG = {
   profesionales: {
     kine: {
       nombre: 'Kin. Katalina Camino',
-      email:  'kine.katalinacamino@gmail.com',   // ← email real (fuente: hoja Usuarios)
-      calendarId: '',                            // ← vacío = usa su email como calendario
+      email:  'kine.katalinacamino@gmail.com',
+      calendarId: '167b04db48724ec5a1b22c416a3fba88457bf49072d60051ed96aad4c9c6e393@group.calendar.google.com',
     },
     psico: {
       nombre: 'Ps. Mario Pidal',
@@ -165,6 +165,47 @@ function esAdmin(email) {
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
+
+    // TEMPORAL: simula agendamiento de Cesar Barria (técnico) hacia profis.
+    if (data.tipo === 'prueba_cesar') {
+      const sim = {
+        profesionalKey: 'profis',
+        profesionalLabel: '💪 Prep. Física',
+        atletaNombre: 'PRUEBA - Cameron (Basket)',
+        polo: 'Basketball',
+        tecnicoNombre: 'Cesar Barria Vargas',
+        tecnicoEmail: 'matias.pendola@gmail.com',   // redirigido para no spamear al coach
+        apoderadoNombre: 'Apoderado Prueba',
+        apoderadoEmail: 'matias.pendola@gmail.com',  // redirigido
+        motivo: 'Prueba de integracion (Cesar agenda PF)',
+        fechaHoraInicio: data.fechaHoraInicio,
+        tipoBloque: 'libre',
+        _email: 'coachbarria@gmail.com',             // simula que agenda Cesar
+      };
+      return ok(agendarCita(sim));
+    }
+
+    // TEMPORAL: verifica un evento por ID en el calendario de profis + en Sheets.
+    if (data.tipo === 'verifica_evento') {
+      const prof = getProfesional('profis');
+      const cal = _calendarioDe(prof);
+      let ev = null;
+      try {
+        const e2 = cal.getEventById(data.eventoId);
+        if (e2) ev = { titulo: e2.getTitle(), inicio: e2.getStartTime().toString(), calendario: cal.getName() };
+      } catch (e) {}
+      const ss = SpreadsheetApp.openById(CONFIG.sheetId);
+      const sheet = ss.getSheetByName('Citas');
+      const rows = sheet.getDataRange().getValues();
+      let enSheet = null;
+      for (let i = 1; i < rows.length; i++) {
+        if (rows[i][0] === data.eventoId) {
+          enSheet = { fecha: _fechaTxt(ss, rows[i][1]), hora: _horaTxt(ss, rows[i][2]), atleta: rows[i][3], prof: rows[i][10], estado: rows[i][13] };
+          break;
+        }
+      }
+      return ok({ evento: ev, enSheet: enSheet });
+    }
 
     // TEMPORAL: verifica todos los calendarios sin token.
     if (data.tipo === 'check_cals') {
