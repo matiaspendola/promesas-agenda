@@ -82,6 +82,19 @@ function probarCorreo() {
   return { ok: true, msg: 'Correo enviado a ' + dest };
 }
 
+// ── AUTORIZAR TODOS LOS PERMISOS ─────────────────────────────
+// EJECUTAR ESTA FUNCIÓN UNA VEZ desde el editor (como la cuenta del sistema).
+// Toca cada servicio para que Google pida y conceda TODOS los permisos,
+// incluido UrlFetchApp (necesario para verificar el login con Google).
+function autorizarPermisos() {
+  SpreadsheetApp.openById(CONFIG.sheetId).getName();            // Sheets
+  CalendarApp.getDefaultCalendar().getName();                  // Calendar
+  MailApp.getRemainingDailyQuota();                            // Mail
+  UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token=x', { muteHttpExceptions: true }); // External request
+  Logger.log('Todos los permisos autorizados correctamente.');
+  return { ok: true, msg: 'Permisos autorizados' };
+}
+
 // ── SEGURIDAD: VERIFICACIÓN DE IDENTIDAD Y SESIÓN ────────────
 // Secreto para firmar los tokens de sesión. Se autogenera una vez y queda
 // guardado en las propiedades del script (no en el código).
