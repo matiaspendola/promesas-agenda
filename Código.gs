@@ -33,8 +33,8 @@ const CONFIG = {
     },
     nutri: {
       nombre: 'Nut. Josefina Enríquez',
-      email:  'josefina.enri.sch@gmail.com', // ← email real
-      calendarId: '',
+      email:  'josefina.enri.sch@gmail.com',
+      calendarId: '956b63d86824db41e0b977ed33e4c77e3d92ae6fd50623cc3c9a97f67fc9c761@group.calendar.google.com',
     },
     medico: {
       nombre: 'Dr. Juan Manuel Guzmán',
