@@ -749,6 +749,27 @@ function buscarTodosUsuarios(email) {
   return matches;
 }
 
+// ── MIGRACIÓN: ADMIN A CUENTA DE PROMESAS ────────────────────
+// Ejecutar UNA VEZ desde el editor. Reasigna el rol admin a la cuenta del
+// sistema y deja a matias.pendola solo como profesional (profis).
+function migrarAdminAPromesas() {
+  const ss = SpreadsheetApp.openById(CONFIG.sheetId);
+  const sheet = ss.getSheetByName('Usuarios');
+  if (!sheet) return { ok: false, error: 'No existe la hoja Usuarios' };
+  const rows = sheet.getDataRange().getValues();
+  let cambios = 0;
+  for (let i = 1; i < rows.length; i++) {
+    const rol = String(rows[i][0]).trim().toLowerCase();
+    if (rol === 'admin') {
+      sheet.getRange(i + 1, 2).setValue('Promesas Chile (Admin)');          // NOMBRE
+      sheet.getRange(i + 1, 3).setValue('promesaschilelosrios@gmail.com');  // CORREO
+      sheet.getRange(i + 1, 5).setValue('confirmado');                      // ESTADO
+      cambios++;
+    }
+  }
+  return { ok: true, msg: 'Filas admin actualizadas: ' + cambios + '. Ahora el admin es promesaschilelosrios@gmail.com y matias.pendola queda solo como profesional.' };
+}
+
 // ── OBTENER CITAS DESDE SHEETS ───────────────────────────────
 function getCitas(data) {
   const ss = SpreadsheetApp.openById(CONFIG.sheetId);
