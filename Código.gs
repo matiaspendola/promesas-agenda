@@ -70,22 +70,108 @@ const CONFIG = {
   duracionMinutos: 60,
 };
 
+// Client ID de Google (debe coincidir con el data-client_id del frontend).
+// Se usa para verificar que el id_token fue emitido para ESTA aplicación.
+const CLIENT_ID = '1011451823200-sntlql8cvr0l1i2fs5h15b3e5sndjp3i.apps.googleusercontent.com';
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 días
+
+// ── FUNCIÓN DE PRUEBA (ejecutar manualmente desde editor para autorizar MailApp) ──
+function probarCorreo() {
+  const dest = 'matias.pendola@gmail.com';
+  MailApp.sendEmail(dest, 'Prueba Promesas Chile - autorizacion correo', 'Permiso de envio activo desde promesaschilelosrios@gmail.com');
+  return { ok: true, msg: 'Correo enviado a ' + dest };
+}
+
+// ── SEGURIDAD: VERIFICACIÓN DE IDENTIDAD Y SESIÓN ────────────
+// Secreto para firmar los tokens de sesión. Se autogenera una vez y queda
+// guardado en las propiedades del script (no en el código).
+function _sessionSecret() {
+  const props = PropertiesService.getScriptProperties();
+  let s = props.getProperty('SESSION_SECRET');
+  if (!s) {
+    s = Utilities.getUuid() + Utilities.getUuid();
+    props.setProperty('SESSION_SECRET', s);
+  }
+  return s;
+}
+
+function _b64url(bytes) {
+  return Utilities.base64EncodeWebSafe(bytes).replace(/=+$/, '');
+}
+
+// Verifica el id_token de Google contra el endpoint oficial de Google.
+// Devuelve el email verificado (en minúsculas) o null si no es válido.
+function verificarIdToken(idToken) {
+  if (!idToken) return null;
+  try {
+    const resp = UrlFetchApp.fetch(
+      'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken),
+      { muteHttpExceptions: true });
+    if (resp.getResponseCode() !== 200) return null;
+    const info = JSON.parse(resp.getContentText());
+    if (info.aud !== CLIENT_ID) return null;                       // emitido para otra app
+    if (info.email_verified !== 'true' && info.email_verified !== true) return null;
+    return String(info.email || '').toLowerCase();
+  } catch (e) {
+    return null;
+  }
+}
+
+// Emite un token de sesión firmado (HMAC). Formato: base64url(payload).base64url(firma)
+function emitirToken(email) {
+  const payload = JSON.stringify({ email: String(email).toLowerCase(), exp: Date.now() + SESSION_TTL_MS });
+  const payloadB64 = _b64url(Utilities.newBlob(payload).getBytes());
+  const sig = Utilities.computeHmacSha256Signature(payloadB64, _sessionSecret());
+  return payloadB64 + '.' + _b64url(sig);
+}
+
+// Verifica un token de sesión. Devuelve el email si la firma y la expiración
+// son válidas; null en caso contrario.
+function verificarToken(token) {
+  if (!token || String(token).indexOf('.') < 0) return null;
+  const parts = String(token).split('.');
+  const payloadB64 = parts[0], sigB64 = parts[1];
+  const expected = _b64url(Utilities.computeHmacSha256Signature(payloadB64, _sessionSecret()));
+  if (expected !== sigB64) return null;                            // firma inválida
+  try {
+    const json = Utilities.newBlob(Utilities.base64DecodeWebSafe(payloadB64)).getDataAsString();
+    const payload = JSON.parse(json);
+    if (!payload.exp || Date.now() > payload.exp) return null;     // expirado
+    return String(payload.email).toLowerCase();
+  } catch (e) {
+    return null;
+  }
+}
+
+// True si el email tiene rol admin en cualquiera de sus filas de Usuarios.
+function esAdmin(email) {
+  return buscarTodosUsuarios(email).some(u => u.rol === 'admin');
+}
+
 // ── ENDPOINT PRINCIPAL (POST) ─────────────────────────────────
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
 
-    // Endpoints públicos (no requieren autenticación)
-    const PUBLICOS = ['validar_usuario', 'get_disponibilidad', 'get_citas'];
-    if (!PUBLICOS.includes(data.tipo)) {
-      const usuario = buscarUsuario(data.userEmail || '');
-      if (!usuario) return err('No autorizado');
+    // El login es el único endpoint sin token previo (verifica el id_token de Google).
+    if (data.tipo === 'validar_usuario') return ok(validarUsuario(data));
 
-      // Restricciones por rol
-      if (data.tipo === 'reagendar_cita' && usuario.rol !== 'admin') return err('Solo el administrador puede reagendar');
-      if (data.tipo === 'suspender_cita' && usuario.rol === 'tecnico') return err('Los técnicos no pueden suspender citas');
-      if (data.tipo === 'guardar_disponibilidad' && usuario.rol === 'tecnico') return err('Los técnicos no pueden modificar disponibilidad');
-      if (data.tipo === 'completar_cita' && usuario.rol === 'tecnico') return err('Los técnicos no pueden cerrar citas');
+    // Todos los demás endpoints exigen un token de sesión válido (no spoofeable).
+    const email = verificarToken(data.token);
+    if (!email) return err('Sesión no válida o expirada. Vuelve a iniciar sesión.');
+    const usuario = buscarUsuario(email);
+    if (!usuario) return err('No autorizado');
+    data._email = email;          // email verificado por el servidor (no viene del cliente)
+
+    // Restricciones por rol (admin se evalúa entre todos los roles del usuario)
+    const _admin = esAdmin(email);
+    if (data.tipo === 'reagendar_cita' && !_admin) return err('Solo el administrador puede reagendar');
+    if (data.tipo === 'suspender_cita' && usuario.rol === 'tecnico') return err('Los técnicos no pueden suspender citas');
+    if (data.tipo === 'guardar_disponibilidad' && usuario.rol === 'tecnico') return err('Los técnicos no pueden modificar disponibilidad');
+    if (data.tipo === 'completar_cita' && usuario.rol === 'tecnico') return err('Los técnicos no pueden cerrar citas');
+    // Endpoints solo-admin (datos sensibles / operaciones destructivas)
+    if (['leer_hoja', 'reset_citas', 'verificar_calendarios'].indexOf(data.tipo) !== -1 && !_admin) {
+      return err('Solo el administrador puede realizar esta acción');
     }
 
     switch (data.tipo) {
@@ -97,7 +183,6 @@ function doPost(e) {
       case 'get_disponibilidad_config': return ok(getDisponibilidadConfig(data));
       case 'setup_usuarios':      return ok(setupUsuarios());
       case 'leer_hoja':           return ok(leerHoja(data));
-      case 'validar_usuario':     return ok(validarUsuario(data));
       case 'get_citas':           return ok(getCitas(data));
       case 'completar_cita':      return ok(completarCita(data));
       case 'reset_citas':         return ok(resetCitas(data));
@@ -111,14 +196,8 @@ function doPost(e) {
 
 // ── ENDPOINT GET (para consultas) ─────────────────────────────
 function doGet(e) {
-  try {
-    if (e.parameter.tipo === 'get_disponibilidad') {
-      return ok(getDisponibilidad(e.parameter));
-    }
-    return ok({ msg: 'API Agenda Promesas Chile activa ✅', version: '1.0' });
-  } catch (e) {
-    return err(e.toString());
-  }
+  // Sin datos sensibles por GET (no hay token). Solo señal de vida.
+  return ok({ msg: 'API Agenda Promesas Chile activa ✅', version: '2.0' });
 }
 
 // ── AGENDAR CITA ─────────────────────────────────────────────
@@ -571,8 +650,7 @@ function enviarCorreo(to, subject, htmlBody) {
 // Diagnóstico: indica, por profesional, si la cuenta del sistema puede
 // escribir en su calendario. Úsalo para verificar que compartieron bien.
 function verificarCalendarios(data) {
-  const usuario = buscarUsuario(data.userEmail || '');
-  if (!usuario || usuario.rol !== 'admin') throw new Error('Solo el administrador puede verificar calendarios');
+  // El acceso admin ya fue validado en doPost; aquí solo se ejecuta el diagnóstico.
   let ejecutaComo = '';
   try { ejecutaComo = Session.getEffectiveUser().getEmail(); } catch (e) { ejecutaComo = '(no disponible)'; }
   const resultado = {};
@@ -594,8 +672,13 @@ function verificarCalendarios(data) {
 
 // ── VALIDACIÓN DE USUARIO DESDE SHEETS ───────────────────────
 function validarUsuario(data) {
-  if (!data.email) return { autorizado: false, error: 'Email requerido' };
-  const usuarios = buscarTodosUsuarios(data.email);
+  // Identidad verificada: id_token de Google (login nuevo) o token de sesión (restaurar).
+  let email = null;
+  if (data.idToken)      email = verificarIdToken(data.idToken);   // login con Google
+  else if (data.token)   email = verificarToken(data.token);       // restaurar sesión
+  if (!email) return { autorizado: false, error: 'No se pudo verificar la identidad. Inicia sesión con Google.' };
+
+  const usuarios = buscarTodosUsuarios(email);
   if (!usuarios.length) return { autorizado: false, error: 'Usuario no autorizado' };
   // Si tiene múltiples roles, el nombre preferido es el del profesional (más específico)
   const prof = usuarios.find(u => u.rol === 'profesional');
@@ -603,6 +686,8 @@ function validarUsuario(data) {
   const primary = prof || admin || usuarios[0];
   return {
     autorizado: true,
+    token: emitirToken(email),      // token de sesión firmado para las siguientes llamadas
+    email: email,
     roles: usuarios,                // todos los roles del usuario
     rol: admin ? 'admin' : primary.rol,
     nombre: primary.nombre,
@@ -685,8 +770,7 @@ function getCitas(data) {
 // ── RESET CITAS (solo admin) ─────────────────────────────────
 // Borra todas las filas de datos de la hoja Citas (mantiene encabezados).
 function resetCitas(data) {
-  const usuario = buscarUsuario(data.userEmail || '');
-  if (!usuario || usuario.rol !== 'admin') throw new Error('Solo el administrador puede resetear las citas');
+  // El acceso admin ya fue validado en doPost.
   const ss = SpreadsheetApp.openById(CONFIG.sheetId);
   const sheet = ss.getSheetByName('Citas');
   if (!sheet) return { ok: true, msg: 'No hay hoja Citas' };

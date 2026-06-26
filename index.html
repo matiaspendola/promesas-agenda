@@ -716,7 +716,13 @@ const PERFILES = {
 
 const NAV_LABELS = {dashboard:'Dashboard', disponibilidad:'Mi Disponibilidad', agenda:'Agenda', citas:'Gestión de Citas', atletas:'Atletas', metricas:'Métricas', integracion:'🔌 Integración'};
 
-let currentProfile = null, currentUser = null, currentEmail = null, currentProfKey = null;
+let currentProfile = null, currentUser = null, currentEmail = null, currentProfKey = null, currentToken = null;
+
+// Llamada al backend que inyecta automáticamente el token de sesión.
+async function gasPost(payload) {
+  if (currentToken && !payload.token && !payload.idToken) payload.token = currentToken;
+  return fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+}
 
 // ===== SESIÓN PERSISTENTE =====
 const SESSION_KEY = 'pch_session';
@@ -724,7 +730,7 @@ const SESSION_TTL = 30 * 24 * 60 * 60 * 1000; // 30 días
 function saveSession() {
   try {
     localStorage.setItem(SESSION_KEY, JSON.stringify({
-      profile: currentProfile, user: currentUser, email: currentEmail, profKey: currentProfKey, ts: Date.now()
+      profile: currentProfile, user: currentUser, email: currentEmail, profKey: currentProfKey, token: currentToken, ts: Date.now()
     }));
   } catch(e) {}
 }
@@ -741,6 +747,7 @@ function aplicarSesion(email, data) {
   const roles = data.roles || [{ rol: data.rol, nombre: data.nombre, key: data.key }];
   const esAdmin = roles.some(r => r.rol === 'admin');
   const profRow  = roles.find(r => r.rol === 'profesional');
+  if (data.token) currentToken = data.token;   // token de sesión firmado por el backend
   currentEmail = email;
   currentProfKey = profRow ? profRow.key : null;
   if (esAdmin && profRow) { currentProfile = 'admin_profesional'; currentUser = profRow.nombre; }
@@ -755,17 +762,18 @@ function aplicarSesion(email, data) {
 async function restoreSession() {
   let s;
   try { s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e) { s = null; }
-  if (!s || !s.email) return;
+  if (!s || !s.email || !s.token) { clearSession(); return; }
   if (Date.now() - (s.ts || 0) > SESSION_TTL) { clearSession(); return; }
+  currentToken = s.token;
   document.getElementById('login-loading').style.display = 'block';
   try {
-    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ tipo: 'validar_usuario', email: s.email }) });
+    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ tipo: 'validar_usuario', token: s.token }) });
     const data = await res.json();
-    if (data.autorizado) aplicarSesion(s.email, data);
-    else clearSession();
+    if (data.autorizado) aplicarSesion(data.email || s.email, data);
+    else { clearSession(); currentToken = null; }
   } catch(e) {
     // Sin conexión: restaurar desde la caché local para no bloquear el acceso
-    currentProfile = s.profile; currentUser = s.user; currentEmail = s.email; currentProfKey = s.profKey;
+    currentProfile = s.profile; currentUser = s.user; currentEmail = s.email; currentProfKey = s.profKey; currentToken = s.token;
     mostrarApp();
   } finally {
     document.getElementById('login-loading').style.display = 'none';
@@ -784,10 +792,11 @@ async function handleGoogleCredential(response) {
   document.getElementById('login-loading').style.display = 'block';
   document.getElementById('login-error').style.display = 'none';
   try {
-    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ tipo: 'validar_usuario', email }) });
+    // Se envía el id_token completo: el backend lo verifica contra Google.
+    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ tipo: 'validar_usuario', idToken: response.credential }) });
     const data = await res.json();
     if (!data.autorizado) { showLoginError('Tu cuenta (' + email + ') no está autorizada en este sistema.'); return; }
-    aplicarSesion(email, data);
+    aplicarSesion(data.email || email, data);
   } catch(e) {
     showLoginError('Error conectando con el servidor. Intenta de nuevo.');
   } finally {
@@ -803,7 +812,7 @@ function showLoginError(msg) {
 }
 
 function doLogout() {
-  currentProfile = null; currentUser = null; currentEmail = null; currentProfKey = null;
+  currentProfile = null; currentUser = null; currentEmail = null; currentProfKey = null; currentToken = null;
   TODAY_CITAS = []; CITAS_DATA = []; CAL_EVENTS = [];
   clearSession();
   if (window.google && google.accounts) google.accounts.id.disableAutoSelect();
@@ -902,7 +911,7 @@ async function setupDisponibilidad(){
   DIAS_SEMANA.forEach(d=>dispConfig[d.dia]={activo:false,franjas:[{inicio:'09:00',fin:'13:00'}]});
   document.getElementById('disp-dias').innerHTML='<div style="padding:24px;text-align:center;color:var(--gt);">Cargando…</div>';
   try{
-    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({tipo:'get_disponibilidad_config',userEmail:currentEmail,profKey:currentProfKey})});
+    const res=await gasPost({tipo:'get_disponibilidad_config',profKey:currentProfKey});
     const data=await res.json();
     if(data.ok&&data.dias&&data.dias.length){
       const grp={};
@@ -956,7 +965,7 @@ async function saveDisponibilidad(){
     }
   }
   try{
-    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({tipo:'guardar_disponibilidad',userEmail:currentEmail,profKey:currentProfKey,dias})});
+    const res=await gasPost({tipo:'guardar_disponibilidad',profKey:currentProfKey,dias});
     const data=await res.json();
     if(data.ok)showToast('✅ Disponibilidad guardada correctamente');
     else showToast('❌ '+(data.error||'Error al guardar'),'err');
@@ -1015,7 +1024,7 @@ async function loadCitas() {
   try {
     const body = { tipo: 'get_citas' };
     if (currentProfKey) body.profKey = currentProfKey;
-    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(body) });
+    const res = await gasPost(body);
     const data = await res.json();
     if (!data.ok) return;
     const all = (data.citas || []).map(citaToLocal);
@@ -1196,7 +1205,7 @@ async function marcarCita(eventoId, estado){
   if(!currentEmail){showToast('No hay sesión activa','err');return;}
   showLoading('Actualizando…');
   try{
-    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({tipo:'completar_cita',userEmail:currentEmail,eventoId,estado})});
+    const res=await gasPost({tipo:'completar_cita',eventoId,estado});
     const data=await res.json();
     if(data.ok){
       showToast(estado==='Completada'?'✓ Cita marcada como realizada':'Cita marcada como no asistida');
@@ -1349,7 +1358,7 @@ async function updateHorarios(){
   if(!selProf_){grid.innerHTML=hmsg('Selecciona un profesional primero');return;}
   grid.innerHTML=hmsg('Consultando disponibilidad…');
   try{
-    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({tipo:'get_disponibilidad',profKey:selProf_.key,fecha})});
+    const res=await gasPost({tipo:'get_disponibilidad',profKey:selProf_.key,fecha});
     const d=await res.json();
     renderSlots(grid,d,selProf_,h=>{selHora=h;});
   }catch(e){grid.innerHTML=hmsg('Error consultando disponibilidad');}
@@ -1402,7 +1411,7 @@ async function confirmCita() {
   try {
     document.getElementById('btn-next').disabled = true;
     document.getElementById('btn-next').textContent = '⏳ Agendando...';
-    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const res = await gasPost(payload);
     const data = await res.json();
     if (data.ok) {
       closeModal();
@@ -1460,7 +1469,7 @@ async function confirmSusp(){
   const btn=document.querySelector('#susp-ov .btn-danger');
   try{
     btn.disabled=true;btn.textContent='⏳ Suspendiendo...';
-    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
+    const res=await gasPost(payload);
     const data=await res.json();
     if(data.ok){
       closeSusp();
@@ -1498,7 +1507,7 @@ async function updateReagendarHorarios(){
   if(!fecha)return;
   grid.innerHTML=hmsg('Consultando disponibilidad…');
   try{
-    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify({tipo:'get_disponibilidad',profKey:reagData.prof,fecha})});
+    const res=await gasPost({tipo:'get_disponibilidad',profKey:reagData.prof,fecha});
     const d=await res.json();
     renderSlots(grid,d,{nombre:reagData.profNom},h=>{reagHora=h;});
   }catch(e){grid.innerHTML=hmsg('Error consultando disponibilidad');}
@@ -1524,7 +1533,7 @@ async function confirmReagendar(){
   const btn=document.querySelector('#reagendar-ov .btn-verde');
   try{
     btn.disabled=true;btn.textContent='⏳ Reagendando...';
-    const res=await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
+    const res=await gasPost(payload);
     const data=await res.json();
     if(data.ok){
       closeReagendar();
@@ -1601,7 +1610,7 @@ async function testIntegracion() {
     tipoBloque: 'libre',
   };
   try {
-    const response = await fetch(gasUrl, { method: 'POST', body: JSON.stringify(payload) });
+    const response = await gasPost(payload);
     const data = await response.json();
     if(data.ok) {
       res_el.innerHTML = '<div style="background:#DCFCE7;border:1px solid #BBF7D0;border-radius:8px;padding:10px 12px;font-size:12px;color:#15803D;">✅ <b>¡Integración funcionando!</b><br>Evento creado en Google Calendar · Emails enviados · Registrado en Sheets<br>ID del evento: ' + data.eventoId + '</div>';
