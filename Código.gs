@@ -28,8 +28,8 @@ const CONFIG = {
     },
     psico: {
       nombre: 'Ps. Mario Pidal',
-      email:  'pidalmario@gmail.com',        // ← email real
-      calendarId: '',
+      email:  'pidalmario@gmail.com',
+      calendarId: '5dee1b832e48ce865cf1fc2f4381b13ab13773c28fbc850c4b7bcc7f168fb932@group.calendar.google.com',
     },
     nutri: {
       nombre: 'Nut. Josefina Enríquez',
@@ -171,11 +171,11 @@ function doPost(e) {
       const todos = CalendarApp.getAllCalendars().map(c => c.getId() + ' → ' + c.getName());
       const resultado = {};
       ['kine','psico','nutri','medico','profis'].forEach(key => {
-        const prof = getProfesional(key) || {};
-        const id = prof.calendarId || prof.email || '';
+        const base = CONFIG.profesionales[key] || {};
+        const id = base.calendarId || base.email || '';
         let accesible = false, calId = null;
         try { const c = CalendarApp.getCalendarById(id); if (c) { accesible = true; calId = c.getId(); } } catch(e) {}
-        resultado[key] = { email: prof.email, idIntentado: id, accesible, calId };
+        resultado[key] = { email: base.email, idIntentado: id, accesible, calId };
       });
       return ok({ todos, resultado });
     }
