@@ -38,7 +38,7 @@ const CONFIG = {
     },
     medico: {
       nombre: 'Dr. Juan Manuel Guzmán',
-      email:  'jm.guzman@gmail.com',          // ← email real
+      email:  'juanma.guzmanh@gmail.com',      // ← email real
       calendarId: '',
     },
     profis: {
@@ -165,6 +165,15 @@ function esAdmin(email) {
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
+
+    // TEMPORAL: verifica todos los calendarios sin token.
+    if (data.tipo === 'check_cals') {
+      const todos = CalendarApp.getAllCalendars().map(c => c.getId() + ' → ' + c.getName());
+      const psico = getProfesional('psico');
+      let psicoAccesible = false;
+      try { psicoAccesible = !!CalendarApp.getCalendarById(psico.email); } catch(e) {}
+      return ok({ todos, psicoEmail: psico.email, psicoAccesible });
+    }
 
     // El login es el único endpoint sin token previo (verifica el id_token de Google).
     if (data.tipo === 'validar_usuario') return ok(validarUsuario(data));
