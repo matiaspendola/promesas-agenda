@@ -169,10 +169,15 @@ function doPost(e) {
     // TEMPORAL: verifica todos los calendarios sin token.
     if (data.tipo === 'check_cals') {
       const todos = CalendarApp.getAllCalendars().map(c => c.getId() + ' → ' + c.getName());
-      const psico = getProfesional('psico');
-      let psicoAccesible = false;
-      try { psicoAccesible = !!CalendarApp.getCalendarById(psico.email); } catch(e) {}
-      return ok({ todos, psicoEmail: psico.email, psicoAccesible });
+      const resultado = {};
+      ['kine','psico','nutri','medico','profis'].forEach(key => {
+        const prof = getProfesional(key) || {};
+        const id = prof.calendarId || prof.email || '';
+        let accesible = false, calId = null;
+        try { const c = CalendarApp.getCalendarById(id); if (c) { accesible = true; calId = c.getId(); } } catch(e) {}
+        resultado[key] = { email: prof.email, idIntentado: id, accesible, calId };
+      });
+      return ok({ todos, resultado });
     }
 
     // El login es el único endpoint sin token previo (verifica el id_token de Google).
@@ -234,18 +239,27 @@ function agendarCita(data) {
   if (isNaN(inicio.getTime())) throw new Error('Fecha/hora inválida');
   if (inicio.getTime() < Date.now() - 60 * 1000) throw new Error('No se puede agendar en el pasado');
 
-  // Validar contra disponibilidad declarada del profesional
   const fechaSolo = data.fechaHoraInicio.split('T')[0];
   const horaSolo  = (data.fechaHoraInicio.split('T')[1] || '').slice(0, 5);
-  const disp = getDisponibilidad({ profKey: data.profesionalKey, fecha: fechaSolo });
-  if (!disp.trabaja) throw new Error('El profesional no tiene disponibilidad configurada para ese día');
 
-  // El horario debe caer dentro de alguna franja válida (libre)
-  if (disp.slotsLibres.indexOf(horaSolo) === -1) {
-    // Si el slot existe pero está ocupado, mensaje específico; si no existe, fuera de franja
-    const existe = (disp.slots || []).some(s => s.hora === horaSolo);
-    throw new Error(existe ? 'Ese horario ya está ocupado. Actualiza y elige otro.' : 'Ese horario está fuera de la disponibilidad del profesional');
+  // Bloqueo distribuido: solo un agendamiento puede escribir a la vez.
+  // Evita doble reserva por peticiones simultáneas al mismo slot.
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(10000); // espera hasta 10 s; lanza excepción si no obtiene el lock
+  } catch (e) {
+    throw new Error('El sistema está procesando otra reserva. Intenta de nuevo en unos segundos.');
   }
+
+  try {
+    // Validar contra disponibilidad (dentro del lock para evitar race condition)
+    const disp = getDisponibilidad({ profKey: data.profesionalKey, fecha: fechaSolo });
+    if (!disp.trabaja) throw new Error('El profesional no tiene disponibilidad configurada para ese día');
+
+    if (disp.slotsLibres.indexOf(horaSolo) === -1) {
+      const existe = (disp.slots || []).some(s => s.hora === horaSolo);
+      throw new Error(existe ? 'Ese horario ya está ocupado. Actualiza y elige otro.' : 'Ese horario está fuera de la disponibilidad del profesional');
+    }
 
   const ss = SpreadsheetApp.openById(CONFIG.sheetId);
 
@@ -305,6 +319,9 @@ function agendarCita(data) {
   });
 
   return { ok: true, eventoId, msg: 'Cita agendada correctamente' };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // ── SUSPENDER CITA ───────────────────────────────────────────
@@ -918,7 +935,7 @@ function setupUsuarios() {
   const profesionales = [
     ['profesional', 'Kin. Katalina Camino',        'kine.katalinacamino@gmail.com',  'kine',   'confirmado'],
     ['profesional', 'Ps. Mario Pidal',              'pidalmario@gmail.com',           'psico',  'confirmado'],
-    ['profesional', 'Nut. Josefina Henríquez',      'josefina.enri.sch@gmail.com',    'nutri',  'confirmado'],
+    ['profesional', 'Nut. Josefina Enríquez',      'josefina.enri.sch@gmail.com',    'nutri',  'confirmado'],
     ['profesional', 'Dr. Juan Manuel Guzmán',       '',                               'medico', 'PENDIENTE'],
     ['profesional', 'Prof. Matías Péndola',         'matias.pendola@gmail.com',       'profis', 'confirmado'],
   ];
@@ -959,6 +976,105 @@ function setupUsuarios() {
   sheet.setFrozenRows(1);
 
   return { ok: true, msg: 'Hoja Usuarios creada con ' + (allRows.length - 1) + ' registros' };
+}
+
+// ── RECORDATORIOS AUTOMÁTICOS ────────────────────────────────
+// Ejecutar UNA VEZ desde el editor para instalar el trigger diario.
+// Luego corre automáticamente cada día a las 08:00 y envía recordatorio
+// a técnicos y apoderados de citas confirmadas del día siguiente.
+function instalarTriggerRecordatorios() {
+  // Eliminar triggers previos del mismo nombre para no duplicar
+  ScriptApp.getProjectTriggers()
+    .filter(t => t.getHandlerFunction() === 'enviarRecordatorios')
+    .forEach(t => ScriptApp.deleteTrigger(t));
+
+  ScriptApp.newTrigger('enviarRecordatorios')
+    .timeBased()
+    .everyDays(1)
+    .atHour(8)
+    .create();
+  Logger.log('Trigger de recordatorios instalado: diario a las 08:00');
+}
+
+function enviarRecordatorios() {
+  const ss = SpreadsheetApp.openById(CONFIG.sheetId);
+  const sheet = ss.getSheetByName('Citas');
+  if (!sheet) return;
+
+  // Fecha de mañana en zona horaria de la planilla
+  const tz = ss.getSpreadsheetTimeZone();
+  const manana = new Date();
+  manana.setDate(manana.getDate() + 1);
+  const mananaStr = Utilities.formatDate(manana, tz, 'yyyy-MM-dd');
+
+  const rows = sheet.getDataRange().getValues();
+  let enviados = 0;
+
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    const estado = String(r[13] || '').toLowerCase();
+    if (estado !== 'confirmada') continue;
+
+    const fechaCita = _fechaTxt(ss, r[1]);
+    if (fechaCita !== mananaStr) continue;
+
+    const data = {
+      atletaNombre:   r[3],
+      polo:           r[4],
+      tecnicoNombre:  r[5],
+      tecnicoEmail:   r[6],
+      apoderadoNombre: r[7],
+      apoderadoEmail:  r[8],
+      profNom:        r[9],
+      profesionalKey: r[10],
+      motivo:         r[12],
+      fechaHoraInicio: fechaCita + 'T' + _horaTxt(ss, r[2]) + ':00',
+    };
+    const prof = getProfesional(data.profesionalKey) || { nombre: data.profNom };
+
+    if (data.tecnicoEmail) {
+      enviarCorreo(
+        data.tecnicoEmail,
+        `[Promesas Chile] Recordatorio: cita manana — ${data.atletaNombre}`,
+        emailRecordatorioHtml(data, prof, 'tecnico')
+      );
+      enviados++;
+    }
+    if (data.apoderadoEmail) {
+      enviarCorreo(
+        data.apoderadoEmail,
+        `[Promesas Chile] Recordatorio: cita manana para ${data.atletaNombre}`,
+        emailRecordatorioHtml(data, prof, 'apoderado')
+      );
+      enviados++;
+    }
+  }
+  Logger.log('Recordatorios enviados: ' + enviados);
+}
+
+function emailRecordatorioHtml(data, prof, destinatario) {
+  const fechaStr = data.fechaHoraInicio.split('T')[0];
+  const horaStr  = (data.fechaHoraInicio.split('T')[1] || '').slice(0, 5);
+  const nombre   = destinatario === 'apoderado' ? data.apoderadoNombre : data.tecnicoNombre;
+  return `
+<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
+  <div style="background:#D97706;padding:16px 20px;border-radius:8px 8px 0 0;">
+    <h2 style="color:white;margin:0;font-size:16px;">• Recordatorio de cita — Promesas Chile</h2>
+  </div>
+  <div style="padding:20px;border:1px solid #FDE68A;border-top:none;border-radius:0 0 8px 8px;background:#FFFBEB;">
+    <p>Estimado/a <b>${nombre}</b>,</p>
+    <p style="margin-top:10px;">Le recordamos que <b>manana</b> tiene una cita programada:</p>
+    <div style="background:#fff;border-radius:8px;padding:14px;margin:14px 0;border-left:4px solid #D97706;">
+      <p><b>• Atleta:</b> ${data.atletaNombre} &nbsp;·&nbsp; ${data.polo}</p>
+      <p><b>• Fecha:</b> ${fechaStr} &nbsp;·&nbsp; <b>Hora:</b> ${horaStr}</p>
+      <p><b>⚕ Profesional:</b> ${prof.nombre}</p>
+      <p><b>• Lugar:</b> ${CONFIG.lugar}</p>
+      ${data.motivo ? `<p><b>• Motivo:</b> ${data.motivo}</p>` : ''}
+    </div>
+    <p>Por favor confirme asistencia respondiendo este correo. En caso de no poder asistir, avise con la mayor anticipacion posible.</p>
+    <p style="margin-top:16px;">Saludos,<br><b>${CONFIG.nombrePrograma}</b></p>
+  </div>
+</div>`;
 }
 
 function ok(data) {
